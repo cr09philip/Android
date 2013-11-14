@@ -81,7 +81,6 @@ public class VoiceListActivity extends Activity implements OnSeekBarChangeListen
 	public int mCurVoiceIndex;
 	
 	public DownloadInfoHandler mDownLoadHander;
-	public PlayInfoHandler mPlayInfoHander;
 	public class DownloadInfoHandler extends Handler {
         public DownloadInfoHandler() {
         }
@@ -205,7 +204,6 @@ public class VoiceListActivity extends Activity implements OnSeekBarChangeListen
 
 	private void initEvent() {
 		mDownLoadHander = new DownloadInfoHandler();
-		mPlayInfoHander = new PlayInfoHandler();
 		mBackButton.setOnClickListener(VoiceListActivity.this);
 
 		mClosePlayInfoBtn.setOnClickListener(VoiceListActivity.this);

@@ -1,6 +1,5 @@
 package cn.kc.demo.audio;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,8 +12,6 @@ import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.os.Bundle;
-import android.os.Message;
 import android.util.Log;
 import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.view.VoiceListActivity;
@@ -106,8 +103,10 @@ public class FilePlayer implements Runnable{
 		
 		mThread = new Thread(this);
 		mThread.start();
+
+		if(mOnPlayStateChangedListener != null)
+			mOnPlayStateChangedListener.onPlayReady();
 		
-		mContext.mPlayInfoHander.sendEmptyMessage(PlayInfoHandler.PLAY_OVER_FLAG);		
 	}
 	
 	public void init(int frequency, int channels,int sampBit) {
@@ -134,7 +133,8 @@ public class FilePlayer implements Runnable{
 		mThread = new Thread(this);
 		mThread.start();
 
-		mContext.mPlayInfoHander.sendEmptyMessage(PlayInfoHandler.PLAY_OVER_FLAG);		
+		if(mOnPlayStateChangedListener != null)
+			mOnPlayStateChangedListener.onPlayReady();	
 	}
 	
 	private void doFilePlay(){
@@ -157,7 +157,8 @@ public class FilePlayer implements Runnable{
 
 			//正常播放完毕
 			if( mThreadRunning){
-				mContext.mPlayInfoHander.sendEmptyMessage(PlayInfoHandler.PLAY_OVER_FLAG);
+				if( mOnPlayStateChangedListener != null)
+					mOnPlayStateChangedListener.onPlayOver();
 			}
 				
 		} catch (IOException e) {
@@ -175,6 +176,9 @@ public class FilePlayer implements Runnable{
 	
 	public interface OnPlayStateChangedListener{
 		void onPlayStateChanged(int from, int to);
+		void onPlayReady();
+		void onPlayOver();
+		void onPlayProgressing();
 	}
 	
 	public void setOnPlayStateChangedListener(OnPlayStateChangedListener l){
@@ -287,7 +291,8 @@ public class FilePlayer implements Runnable{
 			public void run() {
 				if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
 					count++;
-					mContext.mPlayInfoHander.sendEmptyMessage(count);
+					if( mOnPlayStateChangedListener != null)
+						mOnPlayStateChangedListener.onPlayProgressing();
 				}
 			}
 		}, 0, 1000);
