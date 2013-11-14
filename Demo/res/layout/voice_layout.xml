@@ -1,0 +1,250 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/login_bg" >
+
+    <RelativeLayout
+        android:id="@+id/title"
+        android:layout_width="fill_parent"
+        android:layout_height="48dp"        
+        android:layout_alignParentTop="true"
+        android:background="@drawable/title" >
+
+        <Button
+            android:id="@+id/back_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_centerInParent="true"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="12dp"
+            android:background="@drawable/back_btn" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentTop="true"
+            android:layout_toRightOf="@id/back_btn"
+            android:contentDescription="@string/app_name"
+            android:scaleType="fitXY"
+            android:src="@drawable/line_bg" />
+
+        <TextView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:layout_marginRight="20dp"
+            android:layout_toRightOf="@id/back_btn"
+            android:gravity="center"
+            android:text="@string/voice_list"
+            android:textColor="@color/white"
+            android:textSize="8pt" />
+    </RelativeLayout>
+
+    <RelativeLayout
+        android:id="@+id/download_info_view"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:background="@drawable/download_info_bg"
+        android:paddingTop="4dp" >
+
+        <ImageView
+            android:id="@+id/download__btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="5dp"
+            android:background="@drawable/download_btn"
+            android:contentDescription="@string/app_name" />
+
+        <TextView
+            android:id="@+id/success_progress_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            android:layout_marginRight="12dp"
+            android:layout_toRightOf="@id/download__btn"
+            android:text="@string/download_progress"
+            android:textColor="@color/white"
+            android:textSize="8pt" />
+
+        <TextView
+            android:id="@+id/download_speed_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            android:layout_marginRight="12dp"
+            android:text="@string/download_speed"
+            android:textColor="@color/white"
+            android:textSize="8pt" />
+    </RelativeLayout>
+
+    <ListView
+        android:id="@+id/music_list"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:layout_above="@id/download_info_view"
+        android:layout_below="@id/title"
+        android:layout_marginLeft="12dp"
+        android:layout_marginRight="12dp"
+        android:cacheColorHint="#0000"
+        android:divider="@null"
+        android:dividerHeight="10dp"
+        android:fadingEdge="none"
+        android:fastScrollEnabled="true"
+        android:listSelector="@android:color/transparent"
+        android:paddingTop="20dp" >
+    </ListView>
+
+    <LinearLayout
+	    android:id="@+id/play_info_layout"
+	    android:layout_above="@id/download_info_view"
+	    android:layout_width="fill_parent"
+	    android:layout_height="wrap_content"
+	    android:background="@drawable/play_progress_view_bg"
+	    android:orientation="vertical"
+	    android:paddingBottom="3dp"
+	    android:paddingLeft="12dp"
+	    android:paddingRight="12dp"
+	    android:paddingTop="3dp" 
+	    android:visibility="gone">
+	
+        <RelativeLayout
+            android:id="@+id/play_info_header"
+            android:layout_width="fill_parent"
+            android:layout_height="wrap_content"
+            >
+            <ImageView
+	            android:id="@+id/music_btn"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignParentLeft="true"
+	            android:layout_alignParentTop="true"
+	            
+	            android:layout_centerVertical="true"
+	            android:layout_gravity="center"
+	            android:layout_marginLeft="12dp"
+	            android:layout_marginRight="5dp"
+	            android:background="@drawable/music_btn"
+	            android:contentDescription="@string/app_name" />
+	       
+	        <Button
+	            android:id="@+id/close_playinfo_btn"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignParentRight="true"            
+	            android:layout_alignParentTop="true"
+	            android:layout_centerVertical="true"
+	            android:layout_gravity="center"
+	            android:background="@drawable/play_close" />
+	        
+	        <TextView
+	            android:id="@+id/play_info_txt"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_centerVertical="true"
+	            android:layout_gravity="center"
+	            android:layout_marginRight="12dp"
+	            android:layout_toRightOf="@id/music_btn"
+	            android:layout_toLeftOf="@id/close_playinfo_btn"
+	            android:text="@string/devices_name"
+	            android:textColor="@color/white"
+	            android:textSize="8pt" 
+	            android:maxLines="1"
+	            android:scrollHorizontally="true"/>
+        </RelativeLayout>
+        
+	    <RelativeLayout
+	        android:id="@+id/play_time_info_view"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"  >
+	
+	        <TextView
+	            android:id="@+id/play_start_time_view"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignParentLeft="true"
+	            android:layout_gravity="center"
+	            android:layout_marginRight="5dp"
+	            android:text="@string/play_time"
+	            android:textColor="@color/device_list_text"
+	            android:textSize="6pt" />
+	
+	        <TextView
+	            android:id="@+id/play_name_view"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_centerInParent="true"
+	            android:layout_gravity="center"
+	            android:layout_marginRight="5dp"
+	            android:text="@string/play"
+	            android:textColor="@color/device_list_text"
+	            android:textSize="6pt" />
+	
+	        <TextView
+	            android:id="@+id/play_end_time_view"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_alignParentRight="true"
+	            android:layout_gravity="center"
+	            android:text="@string/play_time"
+	            android:textColor="@color/device_list_text"
+	            android:textSize="6pt" />
+	    </RelativeLayout>
+	
+	    <SeekBar
+	        android:id="@+id/play_progress_view"
+	        android:layout_width="fill_parent"
+	        android:layout_height="wrap_content"
+	        android:max="100"
+	        android:maxHeight="8dp"
+	        android:minHeight="8dp"
+	        android:paddingBottom="3dp"
+	        android:paddingLeft="7dp"
+	        android:paddingRight="7dp"
+	        android:paddingTop="3dp"
+	        android:progress="0"
+	        android:progressDrawable="@drawable/seekbar_define_style"
+	        android:secondaryProgress="0"
+	        android:thumb="@drawable/seekbar_thumb" />
+	
+	    <RelativeLayout
+	        android:id="@+id/play_action_view"
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:layout_gravity="center"
+	        android:paddingTop="2dp" >
+	
+	        <Button
+	            android:id="@+id/play_last_btn"
+	            android:layout_alignParentTop="true"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:background="@drawable/play_last" />
+	
+	        <Button
+	            android:id="@+id/play_startorpause_view"
+	            android:layout_alignParentTop="true"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_marginLeft="40dp"
+	            android:layout_marginRight="40dp"
+	            android:layout_toRightOf="@id/play_last_btn"
+	            android:background="@drawable/play_start_btn" />
+	
+	        <Button
+	            android:id="@+id/play_next_view"
+	            android:layout_alignParentTop="true"
+	            android:layout_width="wrap_content"
+	            android:layout_height="wrap_content"
+	            android:layout_toRightOf="@id/play_startorpause_view"
+	            android:background="@drawable/play_next" />
+	    </RelativeLayout>
+	</LinearLayout>
+</RelativeLayout>

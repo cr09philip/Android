@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, DemoActivity!</string>
+    <string name="app_name">Demo</string>
+
+    <string name="login">登陆</string>
+    <string name="devices_list">设备列表</string>
+    <string name="voice_list">音频列表</string>
+    <string name="devices_name">设备**</string>
+    <string name="devices_link">已连接</string>
+    <string name="devices_no_link">未连接</string>
+    <string name="null_str"></string>
+    
+    <string name="play">正在播放</string>
+    <string name="pause">暂停</string>
+    <string name="stop">停止</string>
+    <string name="play_end">播放完毕</string>
+    
+    <string name="play_time">%1$02d:%2$02d</string>
+    
+    <string name="download_progress">已接收    %1$d%%</string>
+    <string name="download_speed">下载速率   %1$dKb/s</string>
+    
+    
+    <string name="receive_progress">已接收   %1$d%</string>    
+    <string name="receive_success">已接收完成</string>
+    
+    <string name="voice_index">n</string>
+</resources>

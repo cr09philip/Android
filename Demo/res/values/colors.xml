@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 首页背景色-->
+    <color name="login_bg">#4F4F4F</color>
+    
+    <!-- 白色-->
+    <color name="white">#FFFFFF</color>
+    
+    <!-- 设备列表 文字 灰色 -->
+   	<color name="device_list_text">#f1f1f1</color>
+   	
+</resources>

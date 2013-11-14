@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:background="@drawable/listview_bg"
+    android:baselineAligned="true"
+    android:descendantFocusability="blocksDescendants"
+    android:orientation="horizontal" >
+
+    <Button
+        android:id="@+id/device_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="8dp"
+        android:background="@drawable/device" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_toRightOf="@id/device_btn"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitXY"
+        android:src="@drawable/line_bg" />
+
+    <TextView
+        android:id="@+id/device_link_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center"
+        android:layout_marginLeft="8dp"
+        android:layout_marginRight="8dp"
+        android:text="@string/devices_no_link"
+        android:textColor="@color/device_list_text"
+        android:textSize="8pt" />
+
+    <Button
+        android:id="@+id/device_wifi_btn"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="8dp"
+        android:layout_toLeftOf="@id/device_link_btn"
+        android:background="@drawable/wifi_four" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_toRightOf="@id/device_wifi_btn"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitXY"
+        android:src="@drawable/line_bg" />
+
+    <TextView
+        android:id="@+id/devices_name_txt"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center"
+        android:layout_marginLeft="14dp"
+        android:layout_toLeftOf="@id/device_wifi_btn"
+        android:layout_toRightOf="@id/device_btn"
+        android:singleLine="true"
+        android:text="@string/devices_name"
+        android:textColor="@color/device_list_text"
+        android:textSize="8pt" />
+
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:layout_toRightOf="@id/devices_name_txt"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitXY"
+        android:src="@drawable/line_bg" />
+
+</RelativeLayout>
