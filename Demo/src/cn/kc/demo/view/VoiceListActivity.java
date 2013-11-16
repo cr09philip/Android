@@ -30,13 +30,17 @@ import android.widget.Toast;
 import cn.kc.demo.R;
 import cn.kc.demo.adapter.ArrayListAdapter;
 import cn.kc.demo.adapter.MusicAdapter;
+import cn.kc.demo.audio.BaseAudioPlayer;
 import cn.kc.demo.audio.FilePlayer;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcSocketServer;
 import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.VolumeControl;
 
-public class VoiceListActivity extends Activity implements OnSeekBarChangeListener, OnClickListener{
+public class VoiceListActivity extends Activity 
+							   implements BaseAudioPlayer.OnNeedBufferInputListener,
+							   BaseAudioPlayer.OnPlayStateChangedListener, 
+							   OnSeekBarChangeListener, OnClickListener{
 	public final static String SID = "sid";
 
 	public final static int MSG_NEW_DOWNLOAD_STATUS = 0;
@@ -121,25 +125,6 @@ public class VoiceListActivity extends Activity implements OnSeekBarChangeListen
         }
     }
 	
-	public class PlayInfoHandler extends Handler {
-		public static final int PLAY_OVER_FLAG = -1;
-		public static final int PLAY_READY_FLAG = 0;
-        public PlayInfoHandler() {
-        }
-        
-        public PlayInfoHandler(Looper L) {
-            super(L);
-        }
-        
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if( msg.what == PLAY_OVER_FLAG){
-            	
-            }else
-            	RefreshDymanicPlayInfo( msg.what, mCurPlayMusicInfo.m_nDuration);
-        }	
-    }
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -291,13 +276,11 @@ public class VoiceListActivity extends Activity implements OnSeekBarChangeListen
 		
 		return true;
 	}
-
 	
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromUser) {
 //		mPlayPosition = progress*info.m_nDuration/100;
 //		mPlayCurrentTimeView.setText(String.format(getString(R.string.play_time), mPlayPosition/60, mPlayPosition%60));
-		
 	}
 
 	public void onStartTrackingTouch(SeekBar seekBar) {
@@ -341,7 +324,47 @@ public class VoiceListActivity extends Activity implements OnSeekBarChangeListen
 			Toast.makeText(VoiceListActivity.this, "下一曲", Toast.LENGTH_LONG).show();
 			break;
 		}
+	}
+
+	public void onPlayStateChanged(int from, int to) {
+		//control
 		
+	}
+
+	public void onPlayReady() {
+		//1.duration
+		
+		//2.cur time
+		
+		//3.process
+		
+		//4.play status
+	}
+
+	public void onPlayOver() {
+		//1.duration
+		
+		//2.cur time
+		
+		//3.process
+		
+		//4.play status
+	}
+
+	public void onPlayProgressing(int progress) {
+		//1.duration
+		
+		//2.cur time
+		
+		//3.process
+		
+		//4.play status
+	}
+
+	public int onNeedPlayingBuffer(byte[] buf) {
+		//read file and 
+		
+		return 0;
 	}
 
 }

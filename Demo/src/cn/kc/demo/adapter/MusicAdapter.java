@@ -74,7 +74,7 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 						//set playinfo settings
 					}
 					if( mContext.mPlayer.mFilePath == null || !mContext.mPlayer.mFilePath.contains(info.m_strName) )
-						mContext.mPlayer.init(mAppPath + "/" + info.m_strName);
+						mContext.mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + info.m_strName);
 					
 					mContext.mCurPlayMusicInfo = info;
 				}
