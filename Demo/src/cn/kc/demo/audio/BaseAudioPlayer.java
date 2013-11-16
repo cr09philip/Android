@@ -9,7 +9,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-
+/**
+ * @author cr09philip
+ * 
+ * uesd to play the pcm buffers, with add some callback to control and notify progress 
+ *  during playing
+ */
 public abstract class BaseAudioPlayer implements Runnable{
 	private static final String TAG = "FilePlayer";
 	
@@ -25,7 +30,6 @@ public abstract class BaseAudioPlayer implements Runnable{
 	private Timer mTimer;
 	private Handler mHandler;
 	private OnPlayStateChangedListener mOnPlayStateChangedListener = null;
-	private OnNeedBufferInputListener mOnNeedBufferInputListener = null;
 	private boolean mThreadRunning = false;
 	
 	private float mMaxAudioVolume;
@@ -76,25 +80,13 @@ public abstract class BaseAudioPlayer implements Runnable{
 	}
 	
 	/**
-	 * @author cr09philip
-	 * 
-	 * used to supply buffers to play
-	 * though this will run in new thread,
-	 * please just commit your audio buf to play without doing other things like ui
-	 */
-	public interface OnNeedBufferInputListener{
-		int onNeedPlayingBuffer(byte[] buf);
-	}
-	public void OnNeedBufferInputListener(OnNeedBufferInputListener l){
-		mOnNeedBufferInputListener  = l;
-	}
-	
-	/**
 	 * int this method, u showld call void initAudioTrack(int frequency, int channels,int sampBit)
 	 * it used to new a AudioTrack and start a thread to play audio
 	 */
-	abstract public void init();
+	abstract protected void init();
 
+	abstract protected int getBufferToPlay(byte[] buf);
+	
 	protected void initAudioTrack(int frequency, int channels,int sampBit) {
 		mThreadRunning = false;
 		mFrequency = frequency;
@@ -129,19 +121,22 @@ public abstract class BaseAudioPlayer implements Runnable{
 		byte[] buf = new byte[mMinBufSize * 2];
 		while(mThreadRunning){
 			if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
-				if( mOnNeedBufferInputListener != null){
-					int temp = 0;
-					temp = mOnNeedBufferInputListener.onNeedPlayingBuffer(buf);
-					if(temp != -1)
-						mAudioTrack.write(buf, 0, temp);
+				int temp = 0;
+				temp = getBufferToPlay(buf);
+				//播放完成
+				if(temp == -1){
+					mTimer.cancel();
+					break;
 				}
+				
+				mAudioTrack.write(buf, 0, temp);
 			}else {  
                 try {  
                     Thread.sleep(1000);  
                 } catch (InterruptedException e) { 
                 	mThreadRunning = false;
                     e.printStackTrace();  
-                }  
+                }
             }
 		}
 
@@ -151,12 +146,22 @@ public abstract class BaseAudioPlayer implements Runnable{
 		}
 	}
 	
-	public void release() {
+	private void release() {
 		if (mAudioTrack != null) {
-			mAudioTrack.stop();
+			if( mAudioTrack.getState() == AudioTrack.STATE_INITIALIZED)
+				mAudioTrack.stop();
+			
 			mAudioTrack.release();
 		}
 	}	
+	
+	protected void recycle(){
+		release();
+		if( mThread != null)
+			mThread.interrupt();
+		if( mTimer != null)
+			mTimer.cancel();
+	}
 	
 	public void run() {
 		//计时器设置
@@ -171,8 +176,7 @@ public abstract class BaseAudioPlayer implements Runnable{
 			@Override
 			public void run() {
 				if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
-					count++;
-					mHandler.sendEmptyMessage(count);
+					mHandler.sendEmptyMessage(count++);
 				}
 			}
 		}, 0, 1000);
@@ -227,16 +231,19 @@ public abstract class BaseAudioPlayer implements Runnable{
 		}
 	}
 	
-	public void seekto(int pos){
+//	//it seems we call do it only in the  MODE_STATIC mode
+//	public void seekto(int pos){
 //		mAudioTrack.setPlaybackHeadPosition(pos);
-	}
-	
-	public void NextAudio(){
-		
-	}
-	public void PrevAudio(){
-		
-	}
+//	}
+//	
+//	public void NextAudio(){
+//		this.init();
+//		this.play();
+//	}
+//	public void PrevAudio(){
+//		this.init();
+//		this.play();
+//	}
 	public void fastForward(){
 		int n = mAudioTrack.getPlaybackHeadPosition();
 		
@@ -284,5 +291,9 @@ public abstract class BaseAudioPlayer implements Runnable{
 			Log.d(TAG,"muteVolume success");
 			mIsAudioVolumeMute = true;
 		}
+	}
+
+	public int getMinBufSize() {
+		return mMinBufSize;
 	}
 }

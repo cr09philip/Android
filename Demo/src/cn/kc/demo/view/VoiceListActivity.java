@@ -1,16 +1,9 @@
 package cn.kc.demo.view;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import android.app.Activity;
-import android.content.res.AssetManager;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
@@ -20,6 +13,8 @@ import android.os.Message;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.AdapterView;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -38,9 +33,9 @@ import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.VolumeControl;
 
 public class VoiceListActivity extends Activity 
-							   implements BaseAudioPlayer.OnNeedBufferInputListener,
-							   BaseAudioPlayer.OnPlayStateChangedListener, 
-							   OnSeekBarChangeListener, OnClickListener{
+							   implements BaseAudioPlayer.OnPlayStateChangedListener, 
+							   OnSeekBarChangeListener, OnClickListener,
+							   OnItemClickListener{
 	public final static String SID = "sid";
 
 	public final static int MSG_NEW_DOWNLOAD_STATUS = 0;
@@ -85,6 +80,9 @@ public class VoiceListActivity extends Activity
 	public int mCurVoiceIndex;
 	
 	public DownloadInfoHandler mDownLoadHander;
+
+	private int mSeekBarProgress = 0;
+	
 	public class DownloadInfoHandler extends Handler {
         public DownloadInfoHandler() {
         }
@@ -109,22 +107,13 @@ public class VoiceListActivity extends Activity
             	
             	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
             	
-            	RefreshStaticPlayInfo(item);
+            	RefreshAllPlayInfo(item);
             	break;
             }
         	mMusicAdapter.setList(mMusicInfoModels);
         }	
-        
-        public MusicInfoModel getItemByName(String name){
-        	for(MusicInfoModel info : mMusicInfoModels){
-        		if(info.m_strName.equals(name)){
-        			return info;
-        		}
-        	}
-			return null;
-        }
     }
-	
+
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -137,8 +126,10 @@ public class VoiceListActivity extends Activity
 		readyToReceive();
 		
 		mPlayer = FilePlayer.instance(VoiceListActivity.this);
+		mPlayer.setOnPlayStateChangedListener(VoiceListActivity.this);
 	}
 	
+	//开启监听线程
 	private void readyToReceive(){
         Thread desktopServerThread = new Thread(new KcSocketServer(VoiceListActivity.this, mAppPath));  
         desktopServerThread.start();  
@@ -176,6 +167,9 @@ public class VoiceListActivity extends Activity
 			 FileUtil.CreatSDDir( mAppPath );
 		}
 		
+		mDownLoadSpeedView.setText(String.format(getString(R.string.download_speed), 0));
+		mSuccessProgressView.setText(String.format(getString(R.string.download_progress), 100));
+
 		mMusicInfoModels = new ArrayList<MusicInfoModel>();
 		GetFiles(mAppPath, null, false);
 
@@ -183,14 +177,13 @@ public class VoiceListActivity extends Activity
 		mMusicAdapter.setList(mMusicInfoModels);
 		mVoiceListView.setAdapter(mMusicAdapter);
 
-		mDownLoadSpeedView.setText(String.format(getString(R.string.download_speed), 0));
-		mSuccessProgressView.setText(String.format(getString(R.string.download_progress), 100));
+		RefreshDownInfo(0, 0);
 	}
 
 	private void initEvent() {
 		mDownLoadHander = new DownloadInfoHandler();
+		
 		mBackButton.setOnClickListener(VoiceListActivity.this);
-
 		mClosePlayInfoBtn.setOnClickListener(VoiceListActivity.this);
 		mSeekBar.setOnSeekBarChangeListener(VoiceListActivity.this);
 		mPalyLastBtn.setOnClickListener(VoiceListActivity.this);
@@ -200,7 +193,7 @@ public class VoiceListActivity extends Activity
 		mPlayNextBtn.setOnClickListener(VoiceListActivity.this);
 	}
 	
-	public void RefreshStaticPlayInfo(MusicInfoModel info){		
+	public void RefreshAllPlayInfo(MusicInfoModel info){		
 		mPlayInfoTxt.setText(info.m_strName);		
 		
 		if( mPlayer.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
@@ -213,8 +206,7 @@ public class VoiceListActivity extends Activity
 		
 		mPlayTimeView.setText(String.format(getString(R.string.play_time), info.m_nDuration/60,info.m_nDuration%60));
 		
-		RefreshDymanicPlayInfo(mSeekBar.getProgress(), info.m_nDuration);
-		RefreshDownInfo(info.m_nDownPercent, info.m_nDownLoadSpeed);
+		RefreshDymanicPlayInfo(mSeekBarProgress , info.m_nDuration);
 	}
 	
 	public void RefreshDymanicPlayInfo(int curPos, int duration){
@@ -227,7 +219,14 @@ public class VoiceListActivity extends Activity
 		mSuccessProgressView.setText(String.format(getString(R.string.download_progress), percent));
 		mDownLoadSpeedView.setText(String.format(getString(R.string.download_speed), speed));
 	}
-	
+    public MusicInfoModel getItemByName(String name){
+    	for(MusicInfoModel info : mMusicInfoModels){
+    		if(info.m_strName.equals(name)){
+    			return info;
+    		}
+    	}
+		return null;
+    }
 	private void GetFiles(String Path, String Extension, boolean IsIterative)  //搜索目录，扩展名，是否进入子文件夹
 	{
     	int nIndex = mMusicInfoModels.size();
@@ -290,8 +289,7 @@ public class VoiceListActivity extends Activity
 	public void onStopTrackingTouch(SeekBar seekBar) {	
 		//set player to play the nCurPos
 //		mPlayPosition = seekBar.getProgress()*info.m_nDuration/100;
-//		mPlayer.seek(mPlayPosition);
-		
+//		mPlayer.seek(mPlayPosition);		
 	}
 
 	public void onClick(View v) {
@@ -323,6 +321,33 @@ public class VoiceListActivity extends Activity
 		case R.id.play_next_view:
 			Toast.makeText(VoiceListActivity.this, "下一曲", Toast.LENGTH_LONG).show();
 			break;
+		case R.id.music_name_txt:
+//			Toast.makeText(VoiceListActivity.this, "music_name_txt", Toast.LENGTH_LONG).show();
+			{
+				if( mPlayInfoLayout.getVisibility() == View.GONE){
+					mPlayInfoLayout.setVisibility(View.VISIBLE);
+					
+					if( mCurPlayMusicInfo != null ){
+						MusicInfoModel thisInfo = (MusicInfoModel) v.getTag();
+						
+						if( ! mCurPlayMusicInfo.m_strName.equals(thisInfo.m_strName)){
+							mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
+						}
+											
+						RefreshAllPlayInfo(mCurPlayMusicInfo);
+						
+						mCurPlayMusicInfo = thisInfo;
+					}else{
+						mCurPlayMusicInfo = (MusicInfoModel) v.getTag();
+
+						mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
+						RefreshAllPlayInfo(mCurPlayMusicInfo);
+					}
+				}
+			}
+			break;
+		default:
+			break;
 		}
 	}
 
@@ -332,39 +357,31 @@ public class VoiceListActivity extends Activity
 	}
 
 	public void onPlayReady() {
-		//1.duration
-		
-		//2.cur time
-		
-		//3.process
-		
-		//4.play status
+		mPlayStateView.setText(R.string.null_str);
+		mPlayAndPauseBtn.setBackgroundResource(R.drawable.play_start_btn);
+		RefreshDymanicPlayInfo(0, mCurPlayMusicInfo.m_nDuration);
 	}
 
 	public void onPlayOver() {
-		//1.duration
+		//1.单曲播放
+		onPlayReady();
+		mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
 		
-		//2.cur time
-		
-		//3.process
-		
-		//4.play status
+		//2.下一曲
+//		mPlayStateView.setText(R.string.pause);
+//		mPlayAndPauseBtn.setBackgroundResource(R.drawable.play_start_btn);
+//		mPlayer.setFilePathAndInitPlayer(nextPath);
+//		RefreshDymanicPlayInfo(0, nextPlayMusicInfo.m_nDuration);
 	}
 
 	public void onPlayProgressing(int progress) {
-		//1.duration
-		
-		//2.cur time
-		
-		//3.process
-		
-		//4.play status
+		mSeekBarProgress = progress;
+		RefreshDymanicPlayInfo(progress, mCurPlayMusicInfo.m_nDuration);
 	}
 
-	public int onNeedPlayingBuffer(byte[] buf) {
-		//read file and 
-		
-		return 0;
+	public void onItemClick(AdapterView<?> parent, View view, int position,
+			long id) {
+		Toast.makeText(VoiceListActivity.this, "OnItemClick", Toast.LENGTH_LONG).show();		
 	}
 
 }

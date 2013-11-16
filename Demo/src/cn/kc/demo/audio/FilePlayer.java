@@ -40,6 +40,8 @@ public class FilePlayer extends BaseAudioPlayer {
 		
 	public void setFilePathAndInitPlayer(String path) {
 		this.mFilePath = path;
+		if( mAudioPlayer != null)
+			mAudioPlayer.recycle();
 		init();
 	}
 	
@@ -51,7 +53,7 @@ public class FilePlayer extends BaseAudioPlayer {
 	}
 
 	@Override
-	public void init() {
+	protected void init() {
 		mListFile.add(mFilePath);
 		try {
 			mInput = new FileInputStream( new File(mFilePath) );
@@ -72,5 +74,16 @@ public class FilePlayer extends BaseAudioPlayer {
 			
 			initAudioTrack(nFrequency, nChannel, nSampBit);
 		}
+	}
+
+	@Override
+	protected int getBufferToPlay(byte[] buf) {
+		int nRes = 0;
+		try {
+			nRes = mInput.read(buf, 0, super.getMinBufSize() * 2);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		return nRes;
 	}
 }
