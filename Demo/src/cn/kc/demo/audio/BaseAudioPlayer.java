@@ -27,7 +27,6 @@ public abstract class BaseAudioPlayer implements Runnable{
 	private int mMinBufSize; 
 	
 	private Thread mThread;
-	private Timer mTimer;
 	private Handler mHandler;
 	private OnPlayStateChangedListener mOnPlayStateChangedListener = null;
 	private boolean mThreadRunning = false;
@@ -124,12 +123,14 @@ public abstract class BaseAudioPlayer implements Runnable{
 				int temp = 0;
 				temp = getBufferToPlay(buf);
 				//播放完成
-				if(temp == -1){
-					mTimer.cancel();
+				if(temp == -1)
 					break;
-				}
 				
 				mAudioTrack.write(buf, 0, temp);
+				int nPos = mAudioTrack.getPlaybackHeadPosition();
+				if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
+					mHandler.sendEmptyMessage(nPos / mFrequency);
+				}
 			}else {  
                 try {  
                     Thread.sleep(1000);  
@@ -159,28 +160,9 @@ public abstract class BaseAudioPlayer implements Runnable{
 		release();
 		if( mThread != null)
 			mThread.interrupt();
-		if( mTimer != null)
-			mTimer.cancel();
 	}
 	
 	public void run() {
-		//计时器设置
-		if(mTimer != null){
-			mTimer.cancel();
-		}
-
-		mTimer = new Timer();
-		
-		mTimer.schedule(new TimerTask() {
-			private int count = 0;
-			@Override
-			public void run() {
-				if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
-					mHandler.sendEmptyMessage(count++);
-				}
-			}
-		}, 0, 1000);
-
 		//播放音频
 		doFilePlay();
 	}
