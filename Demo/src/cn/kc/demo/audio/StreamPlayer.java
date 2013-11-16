@@ -31,8 +31,10 @@ public class StreamPlayer extends BaseAudioPlayer {
 		initAudioTrack(frequency, channels, sampBit);
 	}
 
+	// it will be called in a thread
 	@Override
 	protected int getBufferToPlay(byte[] buf) {
+		
 		return 0;
 	}
 }

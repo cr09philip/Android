@@ -28,9 +28,11 @@ public class KcReceiveMsgThread implements Runnable {
 	private VoiceListActivity mContext;
 	private long mReceiveCount = 0;
 	private long mStartMillis = 0;
+	private KcSocketServer mServer;
 
-	public KcReceiveMsgThread(Context context, Socket socket, String path) {
+	public KcReceiveMsgThread(Context context, KcSocketServer server, Socket socket, String path) {
 		mContext = (VoiceListActivity) context;
+		mServer = server;
 		mSocket = socket;
 		mAppPath = path;
 	}
@@ -85,7 +87,7 @@ public class KcReceiveMsgThread implements Runnable {
 							newMsg.what = VoiceListActivity.MSG_NEW_DOWNLOAD_STATUS;
 							newMsg.obj = newInfo;
 
-							mContext.mDownLoadHander.sendMessage(newMsg);							
+							mServer.mHandler.sendMessage(newMsg);							
 
 							mStartMillis = SystemClock.uptimeMillis();
 
@@ -129,7 +131,7 @@ public class KcReceiveMsgThread implements Runnable {
 								tmpMsg.what = VoiceListActivity.MSG_DOWNLOAD_CHANGE_STATUS;
 								tmpMsg.obj = tmpInfo;
 
-								mContext.mDownLoadHander.sendMessage(tmpMsg);
+								mServer.mHandler.sendMessage(tmpMsg);
 							}
 							outputWrite.close();
 							nFileIndex++;
@@ -147,7 +149,7 @@ public class KcReceiveMsgThread implements Runnable {
 							finishMsg.what = VoiceListActivity.MSG_DOWNLOAD_OK_STATUS;
 							finishMsg.obj = finishInfo;
 
-							mContext.mDownLoadHander.sendMessage(newMsg);
+							mServer.mHandler.sendMessage(newMsg);
 
 							if (nFileIndex >= dataHeader.m_sFileNum)
 								break;

@@ -34,7 +34,7 @@ public class FilePlayer extends BaseAudioPlayer {
 		this.mFilePath = path;
 		if( mAudioPlayer != null)
 			mAudioPlayer.recycle();
-		init();
+		this.init();
 	}
 	
 	public static FilePlayer instance(Context context){
@@ -64,7 +64,7 @@ public class FilePlayer extends BaseAudioPlayer {
 			int nChannel = mHeader.m_bChannels == 0? AudioFormat.CHANNEL_OUT_MONO:AudioFormat.CHANNEL_OUT_STEREO;
 			int nSampBit = mHeader.m_bBitsPerSample == 16?AudioFormat.ENCODING_PCM_16BIT:AudioFormat.ENCODING_PCM_8BIT;
 			
-			initAudioTrack(nFrequency, nChannel, nSampBit);
+			super.initAudioTrack(nFrequency, nChannel, nSampBit);
 		}
 	}
 
@@ -72,6 +72,7 @@ public class FilePlayer extends BaseAudioPlayer {
 	protected int getBufferToPlay(byte[] buf) {
 		int nRes = 0;
 		try {
+			//解码
 			nRes = mInput.read(buf, 0, super.getMinBufSize() * 2);
 		} catch (IOException e) {
 			e.printStackTrace();

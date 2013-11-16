@@ -34,6 +34,7 @@ import cn.kc.demo.utils.VolumeControl;
 
 public class VoiceListActivity extends Activity 
 							   implements BaseAudioPlayer.OnPlayStateChangedListener, 
+							   KcSocketServer.OnDownLoadStateChangedListener,
 							   OnSeekBarChangeListener, OnClickListener,
 							   OnItemClickListener{
 	public final static String SID = "sid";
@@ -42,11 +43,6 @@ public class VoiceListActivity extends Activity
 	public final static int MSG_DOWNLOAD_CHANGE_STATUS = 1;
 	public final static int MSG_DOWNLOAD_OK_STATUS = 2;
 	
-	public final static int MSG_START_PLAYER_STATUS = 0;
-	public static final int MSG_STATUS_CHANGE_STATUS = 1;
-	public static final int MSG_START_PAUSE_STATUS = 2;
-	public final static int MSG_PLAY_OVER_STATUS = 3;
-
 	private ArrayListAdapter<MusicInfoModel> mMusicAdapter;
 	public ArrayList<MusicInfoModel> mMusicInfoModels;
 	
@@ -79,41 +75,8 @@ public class VoiceListActivity extends Activity
 	
 	public int mCurVoiceIndex;
 	
-	public DownloadInfoHandler mDownLoadHander;
-
 	private int mSeekBarProgress = 0;
 	
-	public class DownloadInfoHandler extends Handler {
-        public DownloadInfoHandler() {
-        }
-        public DownloadInfoHandler(Looper L) {
-            super(L);
-        }
-        
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-        	MusicInfoModel info = (MusicInfoModel) msg.obj;
-            switch(msg.what){
-            case MSG_NEW_DOWNLOAD_STATUS:
-            	mMusicInfoModels.add(info);
-            	break;
-            case MSG_DOWNLOAD_CHANGE_STATUS:
-            case MSG_DOWNLOAD_OK_STATUS:
-            	MusicInfoModel item = getItemByName(info.m_strName);
-            	item.m_nDownloadStatus = info.m_nDownloadStatus;
-            	item.m_nDownPercent = info.m_nDownPercent;
-            	item.m_nDownLoadOffset = info.m_nDownLoadOffset;
-            	
-            	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
-            	
-            	RefreshAllPlayInfo(item);
-            	break;
-            }
-        	mMusicAdapter.setList(mMusicInfoModels);
-        }	
-    }
-
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -131,7 +94,9 @@ public class VoiceListActivity extends Activity
 	
 	//开启监听线程
 	private void readyToReceive(){
-        Thread desktopServerThread = new Thread(new KcSocketServer(VoiceListActivity.this, mAppPath));  
+		KcSocketServer socket = new KcSocketServer(VoiceListActivity.this, mAppPath);
+		socket.setOnDownLoadStateChangedListener(VoiceListActivity.this);
+        Thread desktopServerThread = new Thread();  
         desktopServerThread.start();  
 	}
 	
@@ -180,9 +145,7 @@ public class VoiceListActivity extends Activity
 		RefreshDownInfo(0, 0);
 	}
 
-	private void initEvent() {
-		mDownLoadHander = new DownloadInfoHandler();
-		
+	private void initEvent() {		
 		mBackButton.setOnClickListener(VoiceListActivity.this);
 		mClosePlayInfoBtn.setOnClickListener(VoiceListActivity.this);
 		mSeekBar.setOnSeekBarChangeListener(VoiceListActivity.this);
@@ -382,6 +345,35 @@ public class VoiceListActivity extends Activity
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
 		Toast.makeText(VoiceListActivity.this, "OnItemClick", Toast.LENGTH_LONG).show();		
+	}
+
+	public void onDownLoadBegin(MusicInfoModel info) {
+    	mMusicInfoModels.add(info);
+    	mMusicAdapter.setList(mMusicInfoModels);
+	}
+
+	public void onDownLoadEnd(MusicInfoModel info) {
+		MusicInfoModel item = getItemByName(info.m_strName);
+    	item.m_nDownloadStatus = info.m_nDownloadStatus;
+    	item.m_nDownPercent = info.m_nDownPercent;
+    	item.m_nDownLoadOffset = info.m_nDownLoadOffset;
+    	
+    	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
+    	
+    	RefreshAllPlayInfo(item);
+    	mMusicAdapter.setList(mMusicInfoModels);
+	}
+
+	public void onDownloadProgressing(MusicInfoModel info) {
+		MusicInfoModel item = getItemByName(info.m_strName);
+    	item.m_nDownloadStatus = info.m_nDownloadStatus;
+    	item.m_nDownPercent = info.m_nDownPercent;
+    	item.m_nDownLoadOffset = info.m_nDownLoadOffset;
+    	
+    	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
+    	
+    	RefreshAllPlayInfo(item);
+    	mMusicAdapter.setList(mMusicInfoModels);
 	}
 
 }
