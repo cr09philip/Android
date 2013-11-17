@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.net.Socket;
 import java.util.ArrayList;
 
@@ -26,10 +27,11 @@ public class KcReceiveMsgThread implements Runnable {
 	private String mAppPath;
 
 	private VoiceListActivity mContext;
-	private long mReceiveCount = 0;
-	private long mStartMillis = 0;
 	private KcSocketServer mServer;
 
+	private long mBytesToDownload = 0;
+	private long mDownloadBytes = 0;
+	private long mStartMillis = 0;
 	public KcReceiveMsgThread(Context context, KcSocketServer server, Socket socket, String path) {
 		mContext = (VoiceListActivity) context;
 		mServer = server;
@@ -39,124 +41,130 @@ public class KcReceiveMsgThread implements Runnable {
 
 	public int getDownLoadSpeed() {
 		long curMillis = SystemClock.uptimeMillis();
-		return (int) (mReceiveCount * 1000 / (1024 * (curMillis - mStartMillis)));
+		return (int) (mDownloadBytes * 1000 / (1024 * (curMillis - mStartMillis)));
+	}
+	
+	public int getAllDownLoadPercent() {
+		return (int) (mDownloadBytes / mBytesToDownload);
 	}
 
 	public void run() {
 		while (true) {
 			try {
+				//网络读写的流
 				InputStream inputStream = mSocket.getInputStream();
 				OutputStream outputStream = mSocket.getOutputStream();
 
 				// 接收消息，并解析
-				NetHeaderModel header = SocketDataParser
-						.readNetHeader(inputStream);
+				NetHeaderModel header = SocketDataParser.readNetHeader(inputStream);
 				if (header == null)
 					continue;
-
-				mReceiveCount += NetHeaderModel.NET_HEADER_FIXED_SIZE;
+				
+				mBytesToDownload = header.mLength;
+				mDownloadBytes += NetHeaderModel.NET_HEADER_FIXED_SIZE;
 				// 做相应的处理
 				switch (header.mFunction) {
 				case NetHeaderModel.FUNCTION_RECEIVE_LINK:
 					// 返回系統信息 FUNCTION_SEND_TIME_INFO
-					outputStream.write(new SendTimeInfoModel((byte) 0)
-							.toBinStream());
+					outputStream.write(new SendTimeInfoModel((byte) 0).toBinStream());
 					outputStream.flush();
 					break;
 				case NetHeaderModel.FUNCTION_RECEIVE_START:
 					// 接收并存儲到本地
-					DataHeaderModel dataHeader = SocketDataParser
-							.readDataHeader(inputStream);
+					DataHeaderModel dataHeader = SocketDataParser.readDataHeader(inputStream);
 					if (dataHeader != null) {
 						int nFileIndex = 0;
 						while (true) {
-							mReceiveCount += DataHeaderModel.DATA_HEADER_FIXED_SIZE;
+							mDownloadBytes += DataHeaderModel.DATA_HEADER_FIXED_SIZE;
 
-							File file = new File(mAppPath + "/"
-									+ dataHeader.m_strFileName);
-							FileOutputStream outputWrite = new FileOutputStream(
-									file);
+							File file = new File(mAppPath + "/"+ dataHeader.m_strFileName);
+							RandomAccessFile outputWrite = new RandomAccessFile(file,"rw");
 
 							FileHeader fileHeader = new FileHeader(dataHeader);
-							// 这里应该更新listAdapter的数据了，新加项
+							
+							//发送消息 新下载任务
 							MusicInfoModel newInfo = new MusicInfoModel(
-									mContext.mMusicInfoModels.size(),
+									0,
 									dataHeader.m_strFileName,
 									fileHeader.m_nDuration);
+							newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_BEGIN;
+							newInfo.m_nDownPercent = 0;
+							newInfo.m_nDownLoadSpeed = 0;
+							newInfo.m_nDownLoadOffset = 0;
+							
 							Message newMsg = new Message();
-							newMsg.what = VoiceListActivity.MSG_NEW_DOWNLOAD_STATUS;
+							newMsg.what = KcSocketServer.DownloadInfoHandler.DOWNLOAD_BEGIN_FLAG;
 							newMsg.obj = newInfo;
-
 							mServer.mHandler.sendMessage(newMsg);							
 
 							mStartMillis = SystemClock.uptimeMillis();
 
 							// 写文件头
-							outputWrite.write(fileHeader.toBinStream(), 0,
-									FileHeader.FILE_HEADER_SIZE);
-							outputWrite.flush();
+							outputWrite.write(fileHeader.toBinStream(), 0,FileHeader.FILE_HEADER_SIZE);
+//							outputWrite.flush();
 
 							byte buffer[] = new byte[4 * 1024];
 							int nRemain = dataHeader.m_nDataLength;
 
 							// 将InputStream当中的数据取出，并写入到文件
 							// 以包中的數據長度為依據
-							int nDownloadOffset = 0;
+							int nDownloadOffsetPerFile = 0;
 							while (nRemain > 0) {
 								int temp = inputStream.read(buffer);
 								if (temp == -1 && nRemain > 0) {
 									// 失敗存儲序號到list
-									mListError.add(new Short((short) nFileIndex));
 									break;
 								}
 
-								mReceiveCount += temp;
-
-								outputWrite.write(buffer, 0, temp);
-								outputWrite.flush();
-								nRemain -= temp;
-								nDownloadOffset += temp;
+								mDownloadBytes += temp;
 								
-								// 此时是否应该发消息即时更新界面
-								MusicInfoModel tmpInfo = new MusicInfoModel(
-										0,
-										dataHeader.m_strFileName,
-										fileHeader.m_nDuration);
-
-								tmpInfo.m_nDownloadStatus = 1;
-								tmpInfo.m_nDownPercent = nDownloadOffset *100 / fileHeader.m_nLength;
-								tmpInfo.m_nDownLoadOffset = nDownloadOffset;
-								tmpInfo.m_nDownLoadSpeed = getDownLoadSpeed();
+								outputWrite.write(buffer, 0, temp);								
+//								outputWrite.flush();
+								
+								nRemain -= temp;
+								nDownloadOffsetPerFile += temp;
+								
+								//发送消息 下载中 
+								newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_PROGRESSING;
+								newInfo.m_nDownPercent = nDownloadOffsetPerFile *100 / fileHeader.m_nLength;
+								newInfo.m_nDownLoadSpeed = getDownLoadSpeed();								
+								newInfo.m_nDownLoadOffset = nDownloadOffsetPerFile;
+								
 								Message tmpMsg = new Message();
-								tmpMsg.what = VoiceListActivity.MSG_DOWNLOAD_CHANGE_STATUS;
-								tmpMsg.obj = tmpInfo;
+								tmpMsg.what = KcSocketServer.DownloadInfoHandler.DOWNLOAD_PROGRESSING_FLAG;
+								tmpMsg.obj = newInfo;
 
 								mServer.mHandler.sendMessage(tmpMsg);
 							}
+
+							//向文件中写入OFFSET,标示当下是否下载完成
+							outputWrite.seek(FileHeader.File_HEADER_OFFSET_POSTION);
+							outputWrite.writeInt(nDownloadOffsetPerFile);
 							outputWrite.close();
 							nFileIndex++;
-
-							// 此时发送该文件接收完成消息，即时更新界面
-							MusicInfoModel finishInfo = new MusicInfoModel(
-									mContext.mMusicInfoModels.size(),
-									dataHeader.m_strFileName,
-									0);
 							
-							finishInfo.m_nDownloadStatus = 2;
-							finishInfo.m_nDownPercent = 100;
-							finishInfo.m_nDownLoadOffset = nDownloadOffset;
-							Message finishMsg = new Message();
-							finishMsg.what = VoiceListActivity.MSG_DOWNLOAD_OK_STATUS;
-							finishMsg.obj = finishInfo;
+							// 此时发送该文件接收完成消息，即时更新界面
+							if(nDownloadOffsetPerFile == fileHeader.m_nLength){
+								newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_END;
+								newInfo.m_nDownPercent = 100;
+								newInfo.m_nDownLoadSpeed = 0;								
+								newInfo.m_nDownLoadOffset = nDownloadOffsetPerFile;
+								
+								Message finishMsg = new Message();
+								finishMsg.what = KcSocketServer.DownloadInfoHandler.DOWNLOAD_END_FLAG;
+								finishMsg.obj = newInfo;
 
-							mServer.mHandler.sendMessage(newMsg);
-
+								mServer.mHandler.sendMessage(finishMsg);
+							}else{ //失败处理
+								mListError.add(new Short((short) nFileIndex));
+							}
+							
+							
 							if (nFileIndex >= dataHeader.m_sFileNum)
 								break;
 
 							// 讀下一個文件的文件頭
-							dataHeader = SocketDataParser
-									.readDataHeader(inputStream);
+							dataHeader = SocketDataParser.readDataHeader(inputStream);
 						}
 					}
 
@@ -165,13 +173,10 @@ public class KcReceiveMsgThread implements Runnable {
 					// 判斷是否接收完整，并返回接收成功或失敗信息
 					if (mListError.isEmpty()) {
 						// FUNCTION_FILE_OK
-						outputStream.write(new SendReceiveOkModel()
-								.toBinStream());
+						outputStream.write(new SendReceiveOkModel().toBinStream());
 					} else {
 						// FUNCTION_FILE_ERROR
-						outputStream
-								.write(new SendReceiveErrorModel(mListError)
-										.toBinStream());
+						outputStream.write(new SendReceiveErrorModel(mListError).toBinStream());
 					}
 
 					outputStream.flush();
@@ -188,5 +193,9 @@ public class KcReceiveMsgThread implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	public void recycle() {
+		
 	}
 }

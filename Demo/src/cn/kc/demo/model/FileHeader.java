@@ -4,6 +4,8 @@ import cn.kc.demo.utils.CodeUtil;
 
 public class FileHeader {
 	public static final int FILE_HEADER_SIZE = 19;
+	public static final int File_HEADER_OFFSET_POSTION = 11;
+	
 	public byte m_bFormatTag;//0	FormatTag	1	编码格式类型	00—	IMA-ADPCM；01- g.722.1
 							//其他以待扩展
 	public byte m_bChannels;//1	nChannels	1	编码通道数目	00—单声道；
@@ -86,4 +88,25 @@ public class FileHeader {
 		
 		return resBuf;
 	}
+	
+	public int getFileStatus(){
+		if(m_nOffset == 0 )
+			return MusicInfoModel.DOWNLOAD_STATUS_BEGIN;
+		
+		if( m_nOffset != m_nLength)
+			return MusicInfoModel.DOWNLOAD_STATUS_PROGRESSING;
+		
+		return MusicInfoModel.DOWNLOAD_STATUS_END;
+	}
+	
+	public int getFileDownloadPercent(){
+		if(m_nOffset == 0 )
+			return 0;
+		
+		if( m_nOffset != m_nLength)
+			return m_nOffset*100/m_nLength;
+		
+		return 100;		
+	}
+	
 }

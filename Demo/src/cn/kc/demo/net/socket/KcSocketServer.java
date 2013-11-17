@@ -1,5 +1,6 @@
 package cn.kc.demo.net.socket;
 
+import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
@@ -19,14 +20,17 @@ public class KcSocketServer implements Runnable {
 	private String mAppPath;
 	private VoiceListActivity mContext;
 	private OnDownLoadStateChangedListener mOnDownLoadStateChangedListener = null;
-	private ArrayList<Thread> mSocketList;
-
+	private ArrayList<Thread> mListSocket;
+	private ArrayList<KcReceiveMsgThread> mListReceiverMsg;
+	ServerSocket mServerSocket;
 	Handler mHandler;
 	
 	public KcSocketServer(Context context, String path){
 		mContext = (VoiceListActivity) context;
 		mAppPath = path;
-		mSocketList = new ArrayList<Thread>();
+		mListSocket = new ArrayList<Thread>();
+		mListReceiverMsg = new ArrayList<KcReceiveMsgThread>();
+		
 		mHandler = new DownloadInfoHandler();
 	}
 	
@@ -34,14 +38,17 @@ public class KcSocketServer implements Runnable {
 		try{
 			System.out.println("S: Connecting...");  
 		  
-			ServerSocket serverSocket = new ServerSocket(SERVERPORT); 	           
+			mServerSocket = new ServerSocket(SERVERPORT); 	           
 		    while (true) {  
 		        // 等待接受客户端请求   
-		    	Socket client = serverSocket.accept();  
+		    	Socket client = mServerSocket.accept();  
   
 		    	System.out.println("S: Receiving...");
-		    	
-		    	new Thread(new KcReceiveMsgThread(mContext, KcSocketServer.this, client, mAppPath)).start();
+		    	KcReceiveMsgThread receiveMsg = new KcReceiveMsgThread(mContext, KcSocketServer.this, client, mAppPath);
+		    	mListReceiverMsg.add( receiveMsg );
+		    	Thread thread = new Thread();
+		    	thread.start();
+		    	mListSocket.add(thread);
 		    	}
 		}catch(Exception e){
 			e.printStackTrace();  
@@ -89,5 +96,28 @@ public class KcSocketServer implements Runnable {
             	break;
             }
         }
+	}
+
+	public void recycle() {
+		try {
+			mServerSocket.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		if( mListSocket != null){
+			for( Thread thread : mListSocket){
+				if(thread != null){
+					thread.interrupt();
+				}
+			}
+		}
+		
+		if( mListReceiverMsg != null){
+			for( KcReceiveMsgThread receive : mListReceiverMsg){
+				if( receive != null){
+					receive.recycle();
+				}
+			}
+		}
 	}
 }

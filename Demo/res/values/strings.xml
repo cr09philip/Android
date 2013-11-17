@@ -22,8 +22,7 @@
     <string name="download_progress">已接收    %1$d%%</string>
     <string name="download_speed">下载速率   %1$dKb/s</string>
     
-    
-    <string name="receive_progress">已接收   %1$d%</string>    
+    <string name="receive_progress">已接收   %1$d%%</string>    
     <string name="receive_success">已接收完成</string>
     
     <string name="voice_index">n</string>

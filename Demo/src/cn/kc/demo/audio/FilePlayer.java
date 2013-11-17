@@ -1,4 +1,4 @@
-package cn.kc.demo.audio;
+ package cn.kc.demo.audio;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -32,6 +32,13 @@ public class FilePlayer extends BaseAudioPlayer {
 		
 	public void setFilePathAndInitPlayer(String path) {
 		this.mFilePath = path;
+		if( mInput != null){
+			try {
+				mInput.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		if( mAudioPlayer != null)
 			mAudioPlayer.recycle();
 		this.init();
@@ -79,4 +86,18 @@ public class FilePlayer extends BaseAudioPlayer {
 		}
 		return nRes;
 	}
+
+	@Override
+	public void recycle() {
+		super.recycle();
+		
+		if( mInput != null){
+			try {
+				mInput.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+	
 }

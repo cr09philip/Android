@@ -1,4 +1,16 @@
 ========================================================
+2013-11-17 23:27:58
+philip
+update:
+1.modify socket part almost finish
+
+todo list
+1.download refresh UI
+2.while one song playing ,switch to others maybe cant play
+3.play when download
+4.resend file
+========================================================
+========================================================
 2013-11-16 14:54:08
 philip
 update:

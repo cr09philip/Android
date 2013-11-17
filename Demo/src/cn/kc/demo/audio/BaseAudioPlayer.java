@@ -19,7 +19,7 @@ public abstract class BaseAudioPlayer implements Runnable{
 	private static final String TAG = "FilePlayer";
 	
 	protected static BaseAudioPlayer mAudioPlayer = null;
-	private AudioTrack mAudioTrack;
+	public AudioTrack mAudioTrack;
 	private int mFrequency; // 采样率
 	private int mChannel; // 声道
 	private int mSampBit; // 采样精度
@@ -156,7 +156,7 @@ public abstract class BaseAudioPlayer implements Runnable{
 		}
 	}	
 	
-	protected void recycle(){
+	public void recycle(){
 		release();
 		if( mThread != null)
 			mThread.interrupt();
@@ -191,7 +191,7 @@ public abstract class BaseAudioPlayer implements Runnable{
 			Log.d(TAG, "stop---PlaybackHeadPosition:" + mAudioTrack.getPlaybackHeadPosition());
 			
 			mThreadRunning = false;
-
+			
 			if(mOnPlayStateChangedListener != null)
 				mOnPlayStateChangedListener.onPlayStateChanged(from, mAudioTrack.getPlayState());
 			

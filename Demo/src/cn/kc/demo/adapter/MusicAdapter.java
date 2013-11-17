@@ -29,19 +29,34 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 			convertView = inflater.inflate(R.layout.voice_adapter_layout, null);
 			
 			TextView indexView = (TextView) convertView.findViewById(R.id.voice_index_btn);
-			indexView.setText("" + position);
+			indexView.setText("" + info.m_nIndex);
 			
 			TextView nameView = (TextView) convertView.findViewById(R.id.music_name_txt);
 			nameView.setText(info.m_strName);
 			
 			Button downBtn = (Button) convertView.findViewById(R.id.music_static_btn);
-			downBtn.setBackgroundResource(R.drawable.play_satrt_select);
+			if( info.m_nDownloadStatus == MusicInfoModel.DOWNLOAD_STATUS_END){
+				downBtn.setBackgroundResource(R.drawable.play_satrt_select);
+			}else{
+				downBtn.setBackgroundResource(R.drawable.download_btn);
+			}
 			
 			ProgressBar processBar = (ProgressBar)convertView.findViewById(R.id.download_progress_bar);
-			processBar.setProgress(100);
+			processBar.setProgress(info.m_nDownPercent);
 			
 			TextView statusView = (TextView)convertView.findViewById(R.id.receive_status_view);
-			statusView.setText(R.string.receive_success);
+			switch( info.m_nDownloadStatus){
+			case MusicInfoModel.DOWNLOAD_STATUS_BEGIN:
+			case MusicInfoModel.DOWNLOAD_STATUS_PROGRESSING:
+				String format = mContext.getString(R.string.receive_progress);
+				String str = String.format( format, info.m_nDownPercent);
+				statusView.setText(str);
+				break;
+			case MusicInfoModel.DOWNLOAD_STATUS_END:
+				statusView.setText(R.string.receive_success);
+//				statusView.setBackground(background);
+				break;
+			}
 			
 			nameView.setOnClickListener(mContext);		
 			nameView.setTag(info);

@@ -1,15 +1,16 @@
 package cn.kc.demo.view;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import android.app.Activity;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -23,10 +24,10 @@ import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 import cn.kc.demo.R;
-import cn.kc.demo.adapter.ArrayListAdapter;
 import cn.kc.demo.adapter.MusicAdapter;
 import cn.kc.demo.audio.BaseAudioPlayer;
 import cn.kc.demo.audio.FilePlayer;
+import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcSocketServer;
 import cn.kc.demo.utils.FileUtil;
@@ -37,14 +38,11 @@ public class VoiceListActivity extends Activity
 							   KcSocketServer.OnDownLoadStateChangedListener,
 							   OnSeekBarChangeListener, OnClickListener,
 							   OnItemClickListener{
-	public final static String SID = "sid";
-
-	public final static int MSG_NEW_DOWNLOAD_STATUS = 0;
-	public final static int MSG_DOWNLOAD_CHANGE_STATUS = 1;
-	public final static int MSG_DOWNLOAD_OK_STATUS = 2;
+	private static final String TAG = "VoiceListActivity";
+	protected static final String SID = "sid";
 	
-	private ArrayListAdapter<MusicInfoModel> mMusicAdapter;
-	public ArrayList<MusicInfoModel> mMusicInfoModels;
+	private MusicAdapter mMusicAdapter;
+	private ArrayList<MusicInfoModel> mListMusicInfoModels;
 	
 	public MusicInfoModel mCurPlayMusicInfo;
 	private Button mBackButton;
@@ -74,11 +72,12 @@ public class VoiceListActivity extends Activity
 	public String mAppPath = null;
 	
 	public int mCurVoiceIndex;
-	
-	private int mSeekBarProgress = 0;
-	
+
+	private Thread mSocketThread;
+	private KcSocketServer mSocketServer;
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		Log.d(TAG,"onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.voice_layout);
 		
@@ -94,10 +93,10 @@ public class VoiceListActivity extends Activity
 	
 	//开启监听线程
 	private void readyToReceive(){
-		KcSocketServer socket = new KcSocketServer(VoiceListActivity.this, mAppPath);
-		socket.setOnDownLoadStateChangedListener(VoiceListActivity.this);
-        Thread desktopServerThread = new Thread();  
-        desktopServerThread.start();  
+		mSocketServer = new KcSocketServer(VoiceListActivity.this, mAppPath);
+		mSocketServer.setOnDownLoadStateChangedListener(VoiceListActivity.this);
+        mSocketThread = new Thread(mSocketServer);  
+        mSocketThread.start();  
 	}
 	
 	private void initView() {
@@ -135,11 +134,11 @@ public class VoiceListActivity extends Activity
 		mDownLoadSpeedView.setText(String.format(getString(R.string.download_speed), 0));
 		mSuccessProgressView.setText(String.format(getString(R.string.download_progress), 100));
 
-		mMusicInfoModels = new ArrayList<MusicInfoModel>();
+		mListMusicInfoModels = new ArrayList<MusicInfoModel>();
 		GetFiles(mAppPath, null, false);
 
 		mMusicAdapter = new MusicAdapter(this);
-		mMusicAdapter.setList(mMusicInfoModels);
+		mMusicAdapter.setList(mListMusicInfoModels);
 		mVoiceListView.setAdapter(mMusicAdapter);
 
 		RefreshDownInfo(0, 0);
@@ -169,7 +168,7 @@ public class VoiceListActivity extends Activity
 		
 		mPlayTimeView.setText(String.format(getString(R.string.play_time), info.m_nDuration/60,info.m_nDuration%60));
 		
-		RefreshDymanicPlayInfo(mSeekBarProgress , info.m_nDuration);
+		RefreshDymanicPlayInfo(info.m_nCurProgress , info.m_nDuration);
 	}
 	
 	public void RefreshDymanicPlayInfo(int curPos, int duration){
@@ -183,7 +182,7 @@ public class VoiceListActivity extends Activity
 		mDownLoadSpeedView.setText(String.format(getString(R.string.download_speed), speed));
 	}
     public MusicInfoModel getItemByName(String name){
-    	for(MusicInfoModel info : mMusicInfoModels){
+    	for(MusicInfoModel info : mListMusicInfoModels){
     		if(info.m_strName.equals(name)){
     			return info;
     		}
@@ -192,7 +191,7 @@ public class VoiceListActivity extends Activity
     }
 	private void GetFiles(String Path, String Extension, boolean IsIterative)  //搜索目录，扩展名，是否进入子文件夹
 	{
-    	int nIndex = mMusicInfoModels.size();
+    	int nIndex = mListMusicInfoModels.size();
 	    File[] files = new File(Path).listFiles();
 
         if(files == null)  
@@ -207,8 +206,8 @@ public class VoiceListActivity extends Activity
 		                break;
 	        	}
 	        	
-	        	mMusicInfoModels.add(new MusicInfoModel(nIndex, f.getName(),
-	        			MusicInfoModel.getMusicFileDuration(f.getPath())));
+	        	MusicInfoModel newInfo = GetMusicInfoModelFromFile(f);
+	        	mListMusicInfoModels.add(newInfo);
 	 
 	        }
 	        else if (f.isDirectory() ){  //忽略点文件（隐藏文件/文件夹）
@@ -221,6 +220,40 @@ public class VoiceListActivity extends Activity
 	    }
 	}
 
+	private MusicInfoModel GetMusicInfoModelFromFile(File file){
+		MusicInfoModel newInfo = new MusicInfoModel();
+		FileInputStream mInput = null;
+		try {
+			mInput = new FileInputStream( file );
+			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
+			mInput.read(header, 0, FileHeader.FILE_HEADER_SIZE);
+
+			FileHeader fileHeader = new FileHeader(header, 0);
+			
+			newInfo.m_strName = file.getName();
+			
+			newInfo.m_nIndex = getListMusicInfoSize();
+			newInfo.m_nDownLoadOffset = fileHeader.m_nOffset;
+			newInfo.m_nDuration = fileHeader.m_nDuration;
+			newInfo.m_nDownLoadSpeed = 0;
+			
+			newInfo.m_nDownloadStatus = fileHeader.getFileStatus();
+			newInfo.m_nDownPercent = fileHeader.getFileDownloadPercent();
+			
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch(IOException e){
+			e.printStackTrace();
+		}finally{
+			try {
+				mInput.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return newInfo;
+	}
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		VolumeControl volCtl = new VolumeControl(VoiceListActivity.this, AudioManager.STREAM_MUSIC);
@@ -258,6 +291,7 @@ public class VoiceListActivity extends Activity
 	public void onClick(View v) {
 		switch(v.getId()){
 		case R.id.back_btn:
+			release();
 			finish();
 			break;
 		case R.id.close_playinfo_btn:
@@ -289,24 +323,27 @@ public class VoiceListActivity extends Activity
 			{
 				if( mPlayInfoLayout.getVisibility() == View.GONE){
 					mPlayInfoLayout.setVisibility(View.VISIBLE);
+				}
+				
+				if( mCurPlayMusicInfo == null ){
+					mCurPlayMusicInfo = (MusicInfoModel) v.getTag();
+				}else{				
+					MusicInfoModel thisInfo = (MusicInfoModel) v.getTag();
 					
-					if( mCurPlayMusicInfo != null ){
-						MusicInfoModel thisInfo = (MusicInfoModel) v.getTag();
-						
-						if( ! mCurPlayMusicInfo.m_strName.equals(thisInfo.m_strName)){
-							mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
+					if( mCurPlayMusicInfo.m_strName.equals(thisInfo.m_strName)){
+						break;
+					}else{
+						if( mPlayer.getPlayState() != AudioTrack.PLAYSTATE_STOPPED){
+							mPlayer.stop();
+							thisInfo.m_nCurProgress = 0;
 						}
-											
-						RefreshAllPlayInfo(mCurPlayMusicInfo);
 						
 						mCurPlayMusicInfo = thisInfo;
-					}else{
-						mCurPlayMusicInfo = (MusicInfoModel) v.getTag();
-
-						mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
-						RefreshAllPlayInfo(mCurPlayMusicInfo);
 					}
 				}
+
+				mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
+				RefreshAllPlayInfo(mCurPlayMusicInfo);
 			}
 			break;
 		default:
@@ -338,7 +375,7 @@ public class VoiceListActivity extends Activity
 	}
 
 	public void onPlayProgressing(int progress) {
-		mSeekBarProgress = progress;
+		mCurPlayMusicInfo.m_nCurProgress = progress;
 		RefreshDymanicPlayInfo(progress, mCurPlayMusicInfo.m_nDuration);
 	}
 
@@ -348,8 +385,9 @@ public class VoiceListActivity extends Activity
 	}
 
 	public void onDownLoadBegin(MusicInfoModel info) {
-    	mMusicInfoModels.add(info);
-    	mMusicAdapter.setList(mMusicInfoModels);
+		info.m_nIndex = getListMusicInfoSize();
+		mListMusicInfoModels.add(info);
+    	mMusicAdapter.setList(mListMusicInfoModels);
 	}
 
 	public void onDownLoadEnd(MusicInfoModel info) {
@@ -361,7 +399,7 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
     	
     	RefreshAllPlayInfo(item);
-    	mMusicAdapter.setList(mMusicInfoModels);
+    	mMusicAdapter.setList(mListMusicInfoModels);
 	}
 
 	public void onDownloadProgressing(MusicInfoModel info) {
@@ -373,7 +411,57 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
     	
     	RefreshAllPlayInfo(item);
-    	mMusicAdapter.setList(mMusicInfoModels);
+    	mMusicAdapter.setList(mListMusicInfoModels);
+	}
+	
+	public int getListMusicInfoSize(){
+		return mListMusicInfoModels.size();
+	}
+	@Override
+	protected void onRestart() {
+		Log.d(TAG,"onRestart");
+		super.onRestart();
+	}
+	@Override
+	protected void onStart() {
+		Log.d(TAG,"onStart");
+		super.onStart();
 	}
 
+	@Override
+	protected void onResume() {
+		Log.d(TAG,"onResume");
+		if( mPlayer != null && mPlayer.mAudioTrack != null && mPlayer.mAudioTrack.getState() == AudioTrack.STATE_INITIALIZED)
+			mPlayer.play();
+		super.onResume();
+	}
+
+	@Override
+	protected void onPause() {
+		Log.d(TAG,"onPause");
+		if( mPlayer != null && mPlayer.mAudioTrack != null && mPlayer.mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING)
+			mPlayer.pause();
+		super.onPause();
+	}
+
+	@Override
+	protected void onStop() {
+		Log.d(TAG,"onStop");
+		super.onStop();
+	}
+
+	@Override
+	protected void onDestroy() {
+		Log.d(TAG,"onDestroy");
+		release();
+		super.onDestroy();
+	}
+
+	public void release(){
+		mPlayer.recycle();
+		if( mSocketThread != null )
+			mSocketThread.interrupt();
+		if( mSocketServer != null )
+			mSocketServer.recycle();
+	}
 }

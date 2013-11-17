@@ -6,6 +6,11 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 
 public class MusicInfoModel {
+	public static final int DOWNLOAD_STATUS_BEGIN = 0;
+	public static final int DOWNLOAD_STATUS_PROGRESSING = 1;
+	public static final int DOWNLOAD_STATUS_END = 2;
+	
+	
 	public int m_nIndex;
 	public String m_strName;	//just name under apps path
 	
@@ -15,7 +20,7 @@ public class MusicInfoModel {
 	
 //	public int m_nPlayStatus; //1 未播放 2 播放中 3 放暂停 4停止 
 	public int m_nDuration; //总时长
-//	public int m_nCurPosition; //当前进度
+	public int m_nCurProgress; //当前进度
 	
 	public int m_nDownLoadSpeed; // KBytes/s
 	
@@ -25,21 +30,24 @@ public class MusicInfoModel {
 		m_nIndex = 
 		m_nDownloadStatus =
 		m_nDownPercent = 
+		m_nDownLoadOffset = 
 //		m_nPlayStatus = 
 		m_nDuration = 
-//		m_nCurPosition = 
+		m_nCurProgress = 
 		m_nDownLoadSpeed = 0;
 	}
 	
 	public MusicInfoModel(int index, String path, int duration ){		
 		m_nIndex = index;
 		m_strName = path;
+		
 		m_nDownloadStatus = 0;
 		m_nDownPercent = 0;
-		
+
+		m_nDownLoadOffset = 0;
 //		m_nPlayStatus = 0;
 		m_nDuration = duration;
-//		m_nCurPosition = 0;
+		m_nCurProgress = 0;
 		
 		m_nDownLoadSpeed = 0;
 	}
