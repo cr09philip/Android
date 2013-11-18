@@ -1,4 +1,14 @@
 ========================================================
+<<<<<<< HEAD
+2013-11-17 23:36:31
+philip
+update:
+1.modify SOCKET PART
+todo list
+1.PLAY WHEN DOWNLOAD
+2.DOWNLOAD REFRESH UI
+3.PLAY A SONG ,SWITCH TO OTHER ,BUGS 
+=======
 2013-11-17 23:27:58
 philip
 update:
@@ -9,6 +19,7 @@ todo list
 2.while one song playing ,switch to others maybe cant play
 3.play when download
 4.resend file
+>>>>>>> d950eb6b2c5acc16e377d7dff71acc5c8ab97a66
 ========================================================
 ========================================================
 2013-11-16 14:54:08
