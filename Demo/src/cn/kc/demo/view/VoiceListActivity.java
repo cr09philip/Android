@@ -325,10 +325,12 @@ public class VoiceListActivity extends Activity
 					mPlayInfoLayout.setVisibility(View.VISIBLE);
 				}
 				
+				
+				
 				if( mCurPlayMusicInfo == null ){
-					mCurPlayMusicInfo = (MusicInfoModel) v.getTag();
+					mCurPlayMusicInfo = mListMusicInfoModels.get(mVoiceListView.indexOfChild(v));
 				}else{				
-					MusicInfoModel thisInfo = (MusicInfoModel) v.getTag();
+					MusicInfoModel thisInfo = mListMusicInfoModels.get(mVoiceListView.indexOfChild(v));
 					
 					if( mCurPlayMusicInfo.m_strName.equals(thisInfo.m_strName)){
 						break;
@@ -399,7 +401,8 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
     	
     	RefreshAllPlayInfo(item);
-    	mMusicAdapter.setList(mListMusicInfoModels);
+    	mMusicAdapter.notifyDataSetChanged();
+//    	mMusicAdapter.setList(mListMusicInfoModels);
 	}
 
 	public void onDownloadProgressing(MusicInfoModel info) {
@@ -411,7 +414,8 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
     	
     	RefreshAllPlayInfo(item);
-    	mMusicAdapter.setList(mListMusicInfoModels);
+    	mMusicAdapter.notifyDataSetChanged();
+//    	mMusicAdapter.setList(mListMusicInfoModels);
 	}
 	
 	public int getListMusicInfoSize(){

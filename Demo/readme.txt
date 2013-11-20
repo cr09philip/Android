@@ -1,4 +1,18 @@
 ========================================================
+2013-11-20 9:20:00
+philip
+update:
+1.modify download refresh UI 
+
+remain bugs
+1. item onClick 
+todo list
+1.while one song playing ,switch to others maybe cant play
+2.play when download
+3.resend file
+>>>>>>> d950eb6b2c5acc16e377d7dff71acc5c8ab97a66
+========================================================
+========================================================
 <<<<<<< HEAD
 2013-11-17 23:36:31
 philip

@@ -1,8 +1,5 @@
 package cn.kc.demo.audio;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Handler;

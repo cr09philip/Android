@@ -46,7 +46,7 @@ public class KcSocketServer implements Runnable {
 		    	System.out.println("S: Receiving...");
 		    	KcReceiveMsgThread receiveMsg = new KcReceiveMsgThread(mContext, KcSocketServer.this, client, mAppPath);
 		    	mListReceiverMsg.add( receiveMsg );
-		    	Thread thread = new Thread();
+		    	Thread thread = new Thread(receiveMsg);
 		    	thread.start();
 		    	mListSocket.add(thread);
 		    	}
