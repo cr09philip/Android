@@ -43,7 +43,8 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 			holder.processBar = (ProgressBar)convertView.findViewById(R.id.download_progress_bar);			
 			holder.statusView = (TextView)convertView.findViewById(R.id.receive_status_view);
 			
-			holder.nameView.setOnClickListener(mContext);	
+//			holder.nameView.setOnClickListener(mContext);
+			convertView.setOnClickListener(mContext);
 			convertView.setTag(holder);
 		}else{
 			holder = (ViewHolder) convertView.getTag();

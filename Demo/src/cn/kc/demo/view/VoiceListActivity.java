@@ -318,14 +318,13 @@ public class VoiceListActivity extends Activity
 		case R.id.play_next_view:
 			Toast.makeText(VoiceListActivity.this, "下一曲", Toast.LENGTH_LONG).show();
 			break;
-		case R.id.music_name_txt:
+//		case R.id.music_name_txt:
 //			Toast.makeText(VoiceListActivity.this, "music_name_txt", Toast.LENGTH_LONG).show();
+		case R.id.list_item_layout:
 			{
 				if( mPlayInfoLayout.getVisibility() == View.GONE){
 					mPlayInfoLayout.setVisibility(View.VISIBLE);
 				}
-				
-				
 				
 				if( mCurPlayMusicInfo == null ){
 					mCurPlayMusicInfo = mListMusicInfoModels.get(mVoiceListView.indexOfChild(v));

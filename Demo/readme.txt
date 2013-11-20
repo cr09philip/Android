@@ -1,4 +1,14 @@
 ========================================================
+2013-11-20 17:33:14
+philip
+update:
+1.modify bug---when item onClick 
+todo list
+1.while one song playing ,switch to others maybe cant play
+2.play when download
+3.resend file
+========================================================
+========================================================
 2013-11-20 9:20:00
 philip
 update:
