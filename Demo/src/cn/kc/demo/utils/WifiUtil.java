@@ -25,6 +25,7 @@ public class WifiUtil {
             model.setBssid(result.BSSID);
             model.setWifiIntensity(WifiManager.calculateSignalLevel(result.level, 4));
             model.setWifiStatic(counterBSSID != null && counterBSSID.endsWith(result.BSSID) ? DevicesInfoModel.WIFI_LINK : DevicesInfoModel.WIFI_NOT_LINK);
+            model.setSid(result.BSSID.replace(':', '_'));
             devicesInfoModels.add(model);
         }  
 		return devicesInfoModels;

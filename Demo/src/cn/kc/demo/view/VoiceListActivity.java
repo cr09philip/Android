@@ -14,6 +14,7 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
@@ -25,8 +26,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import cn.kc.demo.R;
 import cn.kc.demo.adapter.MusicAdapter;
-import cn.kc.demo.audio.BaseAudioPlayer;
-import cn.kc.demo.audio.FilePlayer;
+import cn.kc.demo.audio.AdpcmAudioPlayer;
+import cn.kc.demo.audio.AudioPlayer;
 import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcSocketServer;
@@ -34,12 +35,15 @@ import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.VolumeControl;
 
 public class VoiceListActivity extends Activity 
-							   implements BaseAudioPlayer.OnPlayStateChangedListener, 
+							   implements AudioPlayer.OnPlayStateChangedListener, //AdpcmAudioPlayer.OnPlayStateChangedListener, //
 							   KcSocketServer.OnDownLoadStateChangedListener,
 							   OnSeekBarChangeListener, OnClickListener,
 							   OnItemClickListener{
 	private static final String TAG = "VoiceListActivity";
 	protected static final String SID = "sid";
+	public static final String mFolderName = "kc_demo";
+	
+	private String mSid;
 	
 	private MusicAdapter mMusicAdapter;
 	private ArrayList<MusicInfoModel> mListMusicInfoModels;
@@ -67,7 +71,8 @@ public class VoiceListActivity extends Activity
 	private Button mPlayAndPauseBtn;
 	private Button mPlayNextBtn;
 		
-	public FilePlayer mPlayer;
+	AudioPlayer mPlayer;
+//	AdpcmAudioPlayer mPlayer;
 	private int mPlayPosition = 0;
 	public String mAppPath = null;
 	
@@ -81,13 +86,17 @@ public class VoiceListActivity extends Activity
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.voice_layout);
 		
+		mSid = this.getIntent().getStringExtra(VoiceListActivity.SID);
+		
 		initView();
 		initData();
 		initEvent();
 
 		readyToReceive();
 		
-		mPlayer = FilePlayer.instance(VoiceListActivity.this);
+		mPlayer = AudioPlayer.instance(VoiceListActivity.this);
+//		mPlayer = AdpcmAudioPlayer.instance(VoiceListActivity.this);
+		
 		mPlayer.setOnPlayStateChangedListener(VoiceListActivity.this);
 	}
 	
@@ -126,7 +135,8 @@ public class VoiceListActivity extends Activity
 	}
 
 	private void initData() {
-		mAppPath = FileUtil.getStoragePath(VoiceListActivity.this) + "/kc_demo";
+		mAppPath = FileUtil.getStoragePath(VoiceListActivity.this) + "/" +  mFolderName + "/" + mSid ;
+		
 		if( !FileUtil.IsFileExist(mAppPath) ){
 			 FileUtil.CreatSDDir( mAppPath );
 		}
@@ -343,7 +353,7 @@ public class VoiceListActivity extends Activity
 					}
 				}
 
-				mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
+				mPlayer.init(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
 				RefreshAllPlayInfo(mCurPlayMusicInfo);
 			}
 			break;
@@ -366,7 +376,7 @@ public class VoiceListActivity extends Activity
 	public void onPlayOver() {
 		//1.单曲播放
 		onPlayReady();
-		mPlayer.setFilePathAndInitPlayer(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
+		mPlayer.init(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
 		
 		//2.下一曲
 //		mPlayStateView.setText(R.string.pause);
@@ -434,8 +444,8 @@ public class VoiceListActivity extends Activity
 	@Override
 	protected void onResume() {
 		Log.d(TAG,"onResume");
-		if( mPlayer != null && mPlayer.mAudioTrack != null && mPlayer.mAudioTrack.getState() == AudioTrack.STATE_INITIALIZED)
-			mPlayer.play();
+//		if( mPlayer != null && mPlayer.mAudioTrack != null && mPlayer.mAudioTrack.getState() == AudioTrack.STATE_INITIALIZED)
+//			mPlayer.play();
 		super.onResume();
 	}
 

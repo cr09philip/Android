@@ -5,7 +5,7 @@ import cn.kc.demo.utils.CodeUtil;
 public class FileHeader {
 	public static final int FILE_HEADER_SIZE = 19;
 	public static final int File_HEADER_OFFSET_POSTION = 11;
-	
+	//int magicNum;
 	public byte m_bFormatTag;//0	FormatTag	1	编码格式类型	00—	IMA-ADPCM；01- g.722.1
 							//其他以待扩展
 	public byte m_bChannels;//1	nChannels	1	编码通道数目	00—单声道；
@@ -15,6 +15,7 @@ public class FileHeader {
 								//（eg：64Kbps—64）
 	public byte m_bSamples; //3	Samples	1	采样率	以KHz为单位（eg：16KHz—16）
 	public byte m_bBitsPerSample;//4	BitsPerSample	1	量化单位（每样本数据位数）	以bit为单位（eg：16—16）
+	//byte m_resver;
 	public short m_sBlock;//5	Block	2	每次处理的数据块的大小	以字节为单位，是指adpcm压缩后的（这里定义为：500）
 	public int m_nLength;//7	LENGTH	4	数据长度	仅指DATA部分的数据长度，单位是字节
 	public int m_nOffset;//11   LENGTH  4   已经接收到的数据长度
@@ -109,4 +110,19 @@ public class FileHeader {
 		return 100;		
 	}
 	
+	public int getSampleRate(){
+		return (int)m_bSamples * 1000;
+	}
+	
+	public boolean isStereo(){
+		return m_bChannels == 1;
+	}
+	
+	public boolean is16Bit(){
+		return m_bBitsPerSample == 16;
+	}
+	
+	public int getBlockSize(){
+		return (int)m_sBlock;
+	}
 }
