@@ -14,24 +14,22 @@ import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.Adapter;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 import cn.kc.demo.R;
 import cn.kc.demo.adapter.MusicAdapter;
-import cn.kc.demo.audio.AdpcmAudioPlayer;
 import cn.kc.demo.audio.AudioPlayer;
 import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcSocketServer;
-import cn.kc.demo.net.socket.KcSocketServer.OnServerSetupListener;
 import cn.kc.demo.utils.CodeUtil;
 import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.VolumeControl;
@@ -87,22 +85,34 @@ public class VoiceListActivity extends Activity
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG,"onCreate");
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.voice_layout);
-		
-		mSid = this.getIntent().getStringExtra(VoiceListActivity.SID);
-		
-		initView();
-		initData();
-		initEvent();
-
-		readyToReceive();
-		
-		mPlayer = AudioPlayer.instance(VoiceListActivity.this);
-//		mPlayer = AdpcmAudioPlayer.instance(VoiceListActivity.this);
-		
-		mPlayer.setOnPlayStateChangedListener(VoiceListActivity.this);
+		setContentView(R.layout.choose);
+		setupViews();
+//		setContentView(R.layout.voice_layout);
+//		
+//		mSid = this.getIntent().getStringExtra(VoiceListActivity.SID);
+//		
+//		initView();
+//		initData();
+//		initEvent();
+//
+//		readyToReceive();
+//		
+//		mPlayer = AudioPlayer.instance(VoiceListActivity.this);
+////		mPlayer = AdpcmAudioPlayer.instance(VoiceListActivity.this);
+//		
+//		mPlayer.setOnPlayStateChangedListener(VoiceListActivity.this);
 	}
-	
+	private void setupViews(){
+		RadioGroup mRGCodeType = (RadioGroup) findViewById(R.id.code_type);
+		mRGCodeType.check(R.id.code_adpcm);
+		RadioGroup mRGChannelMono = (RadioGroup) findViewById(R.id.channel_type);
+		mRGChannelMono.check(R.id.channel_mono);
+		
+		RadioGroup mRGBitRate = (RadioGroup) findViewById(R.id.bit_rate);
+		mRGBitRate.check(R.id.bit_rate_7);
+		RadioGroup mRGBindWidth = (RadioGroup) findViewById(R.id.bind_width);
+		mRGBindWidth.check(R.id.bind_width_32);
+	}
 	//开启监听线程
 	private void readyToReceive(){
 		mSocketServer = new KcSocketServer(VoiceListActivity.this, mAppPath);
