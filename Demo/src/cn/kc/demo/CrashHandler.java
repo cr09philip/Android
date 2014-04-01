@@ -173,7 +173,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
                 Environment.MEDIA_MOUNTED)) {  
             try {  
                 File dir = new File(
-                		FileUtil.getStoragePath(mContext) + "/" +  VoiceListActivity.mFolderName);  
+                		FileUtil.getStoragePath(mContext) + "/" +  VoiceListActivity.mFolderName + "/bugreport");  
                 Log.i("CrashHandler", dir.toString());  
                 if (!dir.exists())  
                     dir.mkdir();  

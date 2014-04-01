@@ -184,9 +184,9 @@ public class AudioPlayer implements Runnable{
 	
 
 	public static AudioPlayer instance(Context context) {
-		if(mAudioPlayer == null)
+		if(mAudioPlayer == null){
 			mAudioPlayer = new AudioPlayer(context);
-		
+		}
 		return mAudioPlayer;
 	}
 	protected void initAudioTrack() {
@@ -212,6 +212,8 @@ public class AudioPlayer implements Runnable{
 
 		if(mOnPlayStateChangedListener != null)
 			mOnPlayStateChangedListener.onPlayReady();	
+		
+		mAudioTrack.setStereoVolume(mMaxAudioVolume, mMaxAudioVolume);
 	}
 
 	// run in play thread
@@ -229,8 +231,8 @@ public class AudioPlayer implements Runnable{
 				
 				audioWriteByteBuffer(buf, temp);
 //				mAudioTrack.write(buf, 0, temp);
-				int nPos = mAudioTrack.getPlaybackHeadPosition();
 				if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
+					int nPos = mAudioTrack.getPlaybackHeadPosition();
 					mHandler.sendEmptyMessage(nPos / mFrequency);
 				}
 			}else {  
@@ -327,9 +329,10 @@ public class AudioPlayer implements Runnable{
 	public void pause(){
 		if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
 			Log.d(TAG,"pause");
-			mAudioTrack.pause();
 			Log.d(TAG, "PlaybackHeadPosition:" + mAudioTrack.getPlaybackHeadPosition());
 
+			mAudioTrack.pause();
+			
 			if(mOnPlayStateChangedListener != null)
 				mOnPlayStateChangedListener.onPlayStateChanged(AudioTrack.PLAYSTATE_PLAYING, mAudioTrack.getPlayState());
 		}

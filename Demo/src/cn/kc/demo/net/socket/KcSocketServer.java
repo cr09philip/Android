@@ -5,14 +5,14 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 
-import cn.kc.demo.model.MusicInfoModel;
-import cn.kc.demo.net.socket.KcSocketServer.OnDownLoadStateChangedListener;
-import cn.kc.demo.view.VoiceListActivity;
-
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
+import cn.kc.demo.model.MusicInfoModel;
+import cn.kc.demo.utils.CodeUtil;
+import cn.kc.demo.utils.WifiAdmin;
+import cn.kc.demo.view.VoiceListActivity;
 
 // we need a socket server to receive msg.
 public class KcSocketServer implements Runnable {
@@ -20,10 +20,13 @@ public class KcSocketServer implements Runnable {
 	private String mAppPath;
 	private VoiceListActivity mContext;
 	private OnDownLoadStateChangedListener mOnDownLoadStateChangedListener = null;
+	private OnServerSetupListener mOnServerSetupListener = null;
 	private ArrayList<Thread> mListSocket;
 	private ArrayList<KcReceiveMsgThread> mListReceiverMsg;
 	ServerSocket mServerSocket;
 	Handler mHandler;
+	private byte[] mAddr;
+	private int mPort;
 	
 	public KcSocketServer(Context context, String path){
 		mContext = (VoiceListActivity) context;
@@ -38,7 +41,20 @@ public class KcSocketServer implements Runnable {
 		try{
 			System.out.println("S: Connecting...");  
 		  
-			mServerSocket = new ServerSocket(SERVERPORT); 	           
+			mServerSocket = new ServerSocket(SERVERPORT); 	  
+			
+			{
+//				InetAddress inetAddr = mServerSocket.getInetAddress();
+				
+//				InetSocketAddress socketAddr = (InetSocketAddress) mServerSocket.getLocalSocketAddress(); 
+//				byte[] addr = socketAddr.getAddress().getAddress();
+				
+				WifiAdmin wifiAdmin = new WifiAdmin(mContext);
+				
+				mAddr =  CodeUtil.int2bytes(wifiAdmin.getIPAddress(), false);
+				mPort = mServerSocket.getLocalPort();
+				mHandler.sendEmptyMessage(DownloadInfoHandler.GET_HOST_IP_ADDRESS_INFO);
+			}
 		    while (true) {  
 		        // 等待接受客户端请求   
 		    	Socket client = mServerSocket.accept();  
@@ -54,13 +70,17 @@ public class KcSocketServer implements Runnable {
 			e.printStackTrace();  
 		}
 	}
-	
+	public interface OnServerSetupListener{
+		void onReturnServerAddress(byte[] addr, int port);
+	}
 	public interface OnDownLoadStateChangedListener{
 		void onDownLoadBegin(MusicInfoModel info);
 		void onDownLoadEnd(MusicInfoModel info);
 		void onDownloadProgressing(MusicInfoModel info);
 	}
-	
+	public void setOnServerSetupListener(OnServerSetupListener l){
+		mOnServerSetupListener = l;
+	}
 	public void setOnDownLoadStateChangedListener(OnDownLoadStateChangedListener l){
 		mOnDownLoadStateChangedListener  = l;
 	}
@@ -69,6 +89,7 @@ public class KcSocketServer implements Runnable {
 		public static final int DOWNLOAD_BEGIN_FLAG = 0;
 		public static final int DOWNLOAD_END_FLAG = 1;		
 		public final static int DOWNLOAD_PROGRESSING_FLAG = 2;
+		public final static int GET_HOST_IP_ADDRESS_INFO = 3;
 
         public DownloadInfoHandler() {
         }
@@ -82,6 +103,7 @@ public class KcSocketServer implements Runnable {
             super.handleMessage(msg);
             MusicInfoModel info = (MusicInfoModel) msg.obj;
             switch(msg.what){
+            
             case DOWNLOAD_BEGIN_FLAG:
             	if( mOnDownLoadStateChangedListener != null)
             		mOnDownLoadStateChangedListener.onDownLoadBegin(info);
@@ -93,6 +115,10 @@ public class KcSocketServer implements Runnable {
             case DOWNLOAD_PROGRESSING_FLAG:
             	if( mOnDownLoadStateChangedListener != null)
             		mOnDownLoadStateChangedListener.onDownloadProgressing(info);
+            	break;
+            case GET_HOST_IP_ADDRESS_INFO:
+            	if( mOnServerSetupListener != null)
+            		mOnServerSetupListener.onReturnServerAddress(mAddr, mPort);
             	break;
             }
         }

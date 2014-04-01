@@ -31,12 +31,15 @@ import cn.kc.demo.audio.AudioPlayer;
 import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcSocketServer;
+import cn.kc.demo.net.socket.KcSocketServer.OnServerSetupListener;
+import cn.kc.demo.utils.CodeUtil;
 import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.VolumeControl;
 
 public class VoiceListActivity extends Activity 
 							   implements AudioPlayer.OnPlayStateChangedListener, //AdpcmAudioPlayer.OnPlayStateChangedListener, //
 							   KcSocketServer.OnDownLoadStateChangedListener,
+							   KcSocketServer.OnServerSetupListener,
 							   OnSeekBarChangeListener, OnClickListener,
 							   OnItemClickListener{
 	private static final String TAG = "VoiceListActivity";
@@ -104,7 +107,9 @@ public class VoiceListActivity extends Activity
 	private void readyToReceive(){
 		mSocketServer = new KcSocketServer(VoiceListActivity.this, mAppPath);
 		mSocketServer.setOnDownLoadStateChangedListener(VoiceListActivity.this);
-        mSocketThread = new Thread(mSocketServer);  
+        mSocketServer.setOnServerSetupListener(VoiceListActivity.this);
+		
+		mSocketThread = new Thread(mSocketServer);  
         mSocketThread.start();  
 	}
 	
@@ -452,8 +457,11 @@ public class VoiceListActivity extends Activity
 	@Override
 	protected void onPause() {
 		Log.d(TAG,"onPause");
-		if( mPlayer != null && mPlayer.mAudioTrack != null && mPlayer.mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING)
+		if( mPlayer != null && mPlayer.mAudioTrack != null && mPlayer.mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
+			mPlayStateView.setText(R.string.pause);
+			mPlayAndPauseBtn.setBackgroundResource(R.drawable.play_start_btn);
 			mPlayer.pause();
+		}
 		super.onPause();
 	}
 
@@ -476,5 +484,15 @@ public class VoiceListActivity extends Activity
 			mSocketThread.interrupt();
 		if( mSocketServer != null )
 			mSocketServer.recycle();
+	}
+
+	public void onReturnServerAddress(byte[] addr, int port) {
+		String str = String.format("Ip:%d.%d.%d.%d port: %d", 
+				CodeUtil.getUnsignedByte(addr[0]),
+				CodeUtil.getUnsignedByte(addr[1]),
+				CodeUtil.getUnsignedByte(addr[2]),
+				CodeUtil.getUnsignedByte(addr[3]),
+				port);
+		Toast.makeText(VoiceListActivity.this, str, 1000).show();
 	}
 }
