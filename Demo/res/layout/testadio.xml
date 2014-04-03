@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>  
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"  
+    android:orientation="vertical"  
+    android:layout_width="fill_parent"  
+    android:layout_height="fill_parent"  
+    >  
+<RadioGroup  
+    android:id="@+id/Horizontal"  
+    android:orientation="horizontal"  
+    android:layout_width="wrap_content"  
+    android:layout_height="wrap_content"  
+    android:padding="5px">  
+    <RadioButton  
+        android:id="@+id/rdbHorizontal"  
+        android:text="采用水平布局"/>  
+    <RadioButton  
+        android:id="@+id/rdbVertical"  
+        android:text="采用垂直布局"/>  
+</RadioGroup>  
+<RadioGroup  
+    android:id="@+id/rdbGravity"  
+    android:orientation="vertical"  
+    android:layout_width="fill_parent"  
+    android:layout_height="wrap_content"  
+    android:padding="5px">  
+    <RadioButton  
+        android:id="@+id/rdbLeft"  
+        android:text="居左"/>  
+    <RadioButton  
+        android:id="@+id/rdbCenter"  
+        android:text="居中"/>  
+    <RadioButton  
+        android:id="@+id/rdbRight"  
+        android:text="居右"/>    
+</RadioGroup>  
+</LinearLayout>  

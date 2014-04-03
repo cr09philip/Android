@@ -12,10 +12,12 @@ import java.util.ArrayList;
 import android.content.Context;
 import android.os.Message;
 import android.os.SystemClock;
+import android.util.Pair;
 import cn.kc.demo.model.DataHeaderModel;
 import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.model.NetHeaderModel;
+import cn.kc.demo.model.SendReSendFileModel;
 import cn.kc.demo.model.SendReceiveErrorModel;
 import cn.kc.demo.model.SendReceiveOkModel;
 import cn.kc.demo.model.SendTimeInfoModel;
@@ -23,7 +25,7 @@ import cn.kc.demo.view.VoiceListActivity;
 
 public class KcReceiveMsgThread implements Runnable {
 	private Socket mSocket = null;
-	private ArrayList<Short> mListError = new ArrayList<Short>();
+	private ArrayList<Pair<Short, Integer>> mListError = new ArrayList<Pair<Short, Integer>>();
 	private String mAppPath;
 
 	private VoiceListActivity mContext;
@@ -66,14 +68,27 @@ public class KcReceiveMsgThread implements Runnable {
 				switch (header.mFunction) {
 				case NetHeaderModel.FUNCTION_RECEIVE_LINK:
 					// 返回系統信息 FUNCTION_SEND_TIME_INFO
-					outputStream.write(new SendTimeInfoModel((byte) 0).toBinStream());
+					SendTimeInfoModel timeModel = new SendTimeInfoModel(
+							mContext.mSettingsDetails.getCode_type(),
+							mContext.mSettingsDetails.getChannel_type());
+					outputStream.write(timeModel.toBinStream());
 					outputStream.flush();
+					
+					//是否在这里准备断点续传
+					for(MusicInfoModel info : mContext.mListMusicInfoModels){
+						if(info.m_isNeedContuinue){
+							SendReSendFileModel model = new SendReSendFileModel(info.m_sIndex, info.m_nDownLoadOffset);
+							
+							outputStream.write(model.toBinStream());
+							outputStream.flush();
+						}
+					}
 					break;
 				case NetHeaderModel.FUNCTION_RECEIVE_START:
 					// 接收并存儲到本地
 					DataHeaderModel dataHeader = SocketDataParser.readDataHeader(inputStream);
 					if (dataHeader != null) {
-						int nFileIndex = 0;
+						short sFileIndex = 0;
 						while (true) {
 							mDownloadBytes += DataHeaderModel.DATA_HEADER_FIXED_SIZE;
 
@@ -84,7 +99,7 @@ public class KcReceiveMsgThread implements Runnable {
 							
 							//发送消息 新下载任务
 							MusicInfoModel newInfo = new MusicInfoModel(
-									0,
+									sFileIndex,
 									dataHeader.m_strFileName,
 									fileHeader.m_nDuration);
 							newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_BEGIN;
@@ -118,7 +133,11 @@ public class KcReceiveMsgThread implements Runnable {
 
 								mDownloadBytes += temp;
 								
-								outputWrite.write(buffer, 0, temp);								
+								outputWrite.seek(FileHeader.File_HEADER_OFFSET_POSTION + nDownloadOffsetPerFile);
+								outputWrite.write(buffer, 0, temp);
+								//向文件中写入OFFSET,标示当下是否下载完成
+								outputWrite.seek(FileHeader.File_HEADER_OFFSET_POSTION);
+								outputWrite.writeInt(nDownloadOffsetPerFile);								
 //								outputWrite.flush();
 								
 								nRemain -= temp;
@@ -137,14 +156,12 @@ public class KcReceiveMsgThread implements Runnable {
 								mServer.mHandler.sendMessage(tmpMsg);
 							}
 
-							//向文件中写入OFFSET,标示当下是否下载完成
-							outputWrite.seek(FileHeader.File_HEADER_OFFSET_POSTION);
-							outputWrite.writeInt(nDownloadOffsetPerFile);
 							outputWrite.close();
-							nFileIndex++;
+							sFileIndex++;
 							
 							// 此时发送该文件接收完成消息，即时更新界面
 							if(nDownloadOffsetPerFile == fileHeader.m_nLength){
+								
 								newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_END;
 								newInfo.m_nDownPercent = 100;
 								newInfo.m_nDownLoadSpeed = 0;								
@@ -156,11 +173,19 @@ public class KcReceiveMsgThread implements Runnable {
 
 								mServer.mHandler.sendMessage(finishMsg);
 							}else{ //失败处理
-								mListError.add(new Short((short) nFileIndex));
+								file.delete();
+								
+								Pair<Short, Integer> pair = new Pair<Short, Integer>(sFileIndex, nDownloadOffsetPerFile);
+								mListError.add( pair);
+								
+								Message errorMsg = new Message();
+								errorMsg.what = KcSocketServer.DownloadInfoHandler.DOWNLOAD_ERROR_FLAG;
+								errorMsg.obj = newInfo;
+
+								mServer.mHandler.sendMessage(errorMsg);
 							}
 							
-							
-							if (nFileIndex >= dataHeader.m_sFileNum)
+							if (sFileIndex >= dataHeader.m_sFileNum)
 								break;
 
 							// 讀下一個文件的文件頭
@@ -177,6 +202,8 @@ public class KcReceiveMsgThread implements Runnable {
 					} else {
 						// FUNCTION_FILE_ERROR
 						outputStream.write(new SendReceiveErrorModel(mListError).toBinStream());
+						
+						mListError.clear();
 					}
 
 					outputStream.flush();

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="band_width_value">
+        <item>7KHz</item>
+        <item>14KHz</item>
+    </string-array>
+    
+    <string-array name="bit_rate_value">
+        <item>24Kbit</item>
+        <item>32Kbit</item>
+        <item>48Kbit</item>
+    </string-array>
+</resources>

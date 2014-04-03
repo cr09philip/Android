@@ -77,6 +77,7 @@ public class KcSocketServer implements Runnable {
 		void onDownLoadBegin(MusicInfoModel info);
 		void onDownLoadEnd(MusicInfoModel info);
 		void onDownloadProgressing(MusicInfoModel info);
+		void onDownloadError(MusicInfoModel info);
 	}
 	public void setOnServerSetupListener(OnServerSetupListener l){
 		mOnServerSetupListener = l;
@@ -89,7 +90,8 @@ public class KcSocketServer implements Runnable {
 		public static final int DOWNLOAD_BEGIN_FLAG = 0;
 		public static final int DOWNLOAD_END_FLAG = 1;		
 		public final static int DOWNLOAD_PROGRESSING_FLAG = 2;
-		public final static int GET_HOST_IP_ADDRESS_INFO = 3;
+		public final static int DOWNLOAD_ERROR_FLAG = 3;
+		public final static int GET_HOST_IP_ADDRESS_INFO = 4;
 
         public DownloadInfoHandler() {
         }
@@ -115,6 +117,10 @@ public class KcSocketServer implements Runnable {
             case DOWNLOAD_PROGRESSING_FLAG:
             	if( mOnDownLoadStateChangedListener != null)
             		mOnDownLoadStateChangedListener.onDownloadProgressing(info);
+            	break;
+            case DOWNLOAD_ERROR_FLAG:
+            	if( mOnDownLoadStateChangedListener != null)
+            		mOnDownLoadStateChangedListener.onDownloadError(info);
             	break;
             case GET_HOST_IP_ADDRESS_INFO:
             	if( mOnServerSetupListener != null)

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
@@ -19,12 +20,12 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RadioGroup;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
 import cn.kc.demo.R;
+import cn.kc.demo.SettingsSp;
 import cn.kc.demo.adapter.MusicAdapter;
 import cn.kc.demo.audio.AudioPlayer;
 import cn.kc.demo.model.FileHeader;
@@ -42,12 +43,13 @@ public class VoiceListActivity extends Activity
 							   OnItemClickListener{
 	private static final String TAG = "VoiceListActivity";
 	protected static final String SID = "sid";
-	public static final String mFolderName = "kc_demo";
+	public static final String FOLDER_NAME = "kc_demo";
+	public static final String SETTINGS_PARAMS = "Settings";
 	
 	private String mSid;
 	
 	private MusicAdapter mMusicAdapter;
-	private ArrayList<MusicInfoModel> mListMusicInfoModels;
+	public ArrayList<MusicInfoModel> mListMusicInfoModels;
 	
 	public MusicInfoModel mCurPlayMusicInfo;
 	private Button mBackButton;
@@ -81,37 +83,28 @@ public class VoiceListActivity extends Activity
 
 	private Thread mSocketThread;
 	private KcSocketServer mSocketServer;
+	private Button mSettingBtn;
+	
+	public SettingsSp mSettingsDetails;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG,"onCreate");
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.choose);
-		setupViews();
-//		setContentView(R.layout.voice_layout);
-//		
-//		mSid = this.getIntent().getStringExtra(VoiceListActivity.SID);
-//		
-//		initView();
-//		initData();
-//		initEvent();
-//
-//		readyToReceive();
-//		
-//		mPlayer = AudioPlayer.instance(VoiceListActivity.this);
-////		mPlayer = AdpcmAudioPlayer.instance(VoiceListActivity.this);
-//		
-//		mPlayer.setOnPlayStateChangedListener(VoiceListActivity.this);
-	}
-	private void setupViews(){
-		RadioGroup mRGCodeType = (RadioGroup) findViewById(R.id.code_type);
-		mRGCodeType.check(R.id.code_adpcm);
-		RadioGroup mRGChannelMono = (RadioGroup) findViewById(R.id.channel_type);
-		mRGChannelMono.check(R.id.channel_mono);
+		setContentView(R.layout.voice_layout);
 		
-		RadioGroup mRGBitRate = (RadioGroup) findViewById(R.id.bit_rate);
-		mRGBitRate.check(R.id.bit_rate_7);
-		RadioGroup mRGBindWidth = (RadioGroup) findViewById(R.id.bind_width);
-		mRGBindWidth.check(R.id.bind_width_32);
+		mSid = this.getIntent().getStringExtra(VoiceListActivity.SID);
+		
+		initView();
+		initData();
+		initEvent();
+
+		readyToReceive();
+		
+		mPlayer = AudioPlayer.instance(VoiceListActivity.this);
+//		mPlayer = AdpcmAudioPlayer.instance(VoiceListActivity.this);
+		
+		mPlayer.setOnPlayStateChangedListener(VoiceListActivity.this);
 	}
 	//开启监听线程
 	private void readyToReceive(){
@@ -147,10 +140,14 @@ public class VoiceListActivity extends Activity
 		mPalyLastBtn = (Button) findViewById(R.id.play_last_btn);
 		mPlayAndPauseBtn = (Button) findViewById(R.id.play_startorpause_view);
 		mPlayNextBtn = (Button) findViewById(R.id.play_next_view);
+		
+		mSettingBtn = (Button) findViewById(R.id.settings);
 	}
 
 	private void initData() {
-		mAppPath = FileUtil.getStoragePath(VoiceListActivity.this) + "/" +  mFolderName + "/" + mSid ;
+		mSettingsDetails = SettingsSp.Instance().init(this);
+		
+		mAppPath = FileUtil.getStoragePath(VoiceListActivity.this) + "/" +  FOLDER_NAME ;
 		
 		if( !FileUtil.IsFileExist(mAppPath) ){
 			 FileUtil.CreatSDDir( mAppPath );
@@ -178,6 +175,8 @@ public class VoiceListActivity extends Activity
 		mPlayAndPauseBtn.setOnClickListener(VoiceListActivity.this);
 		
 		mPlayNextBtn.setOnClickListener(VoiceListActivity.this);
+		
+		mSettingBtn.setOnClickListener(VoiceListActivity.this);
 	}
 	
 	public void RefreshAllPlayInfo(MusicInfoModel info){		
@@ -232,6 +231,7 @@ public class VoiceListActivity extends Activity
 	        	}
 	        	
 	        	MusicInfoModel newInfo = GetMusicInfoModelFromFile(f);
+	        	newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_LOCAL;
 	        	mListMusicInfoModels.add(newInfo);
 	 
 	        }
@@ -246,9 +246,10 @@ public class VoiceListActivity extends Activity
 	}
 
 	private MusicInfoModel GetMusicInfoModelFromFile(File file){
-		MusicInfoModel newInfo = new MusicInfoModel();
+		MusicInfoModel newInfo = null;
 		FileInputStream mInput = null;
 		try {
+			newInfo = new MusicInfoModel();
 			mInput = new FileInputStream( file );
 			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
 			mInput.read(header, 0, FileHeader.FILE_HEADER_SIZE);
@@ -257,7 +258,7 @@ public class VoiceListActivity extends Activity
 			
 			newInfo.m_strName = file.getName();
 			
-			newInfo.m_nIndex = getListMusicInfoSize();
+			newInfo.m_sIndex = (short) getListMusicInfoSize();
 			newInfo.m_nDownLoadOffset = fileHeader.m_nOffset;
 			newInfo.m_nDuration = fileHeader.m_nDuration;
 			newInfo.m_nDownLoadSpeed = 0;
@@ -265,9 +266,14 @@ public class VoiceListActivity extends Activity
 			newInfo.m_nDownloadStatus = fileHeader.getFileStatus();
 			newInfo.m_nDownPercent = fileHeader.getFileDownloadPercent();
 			
+			if(fileHeader.m_nLength != fileHeader.m_nOffset)
+				newInfo.m_isNeedContuinue = true;
+			
 		} catch (FileNotFoundException e) {
+			newInfo = null;
 			e.printStackTrace();
 		} catch(IOException e){
+			newInfo = null;
 			e.printStackTrace();
 		}finally{
 			try {
@@ -328,6 +334,11 @@ public class VoiceListActivity extends Activity
 			Toast.makeText(VoiceListActivity.this, "上一曲", Toast.LENGTH_LONG).show();
 			break;
 		case R.id.play_startorpause_view:
+			if(mPlayer == null || !mPlayer.isInited()){
+				String str = getResources().getString(R.string.select_nothing);
+				Toast.makeText(VoiceListActivity.this, str, Toast.LENGTH_LONG).show();
+				break;
+			}
 			if( mPlayer.getPlayState() != AudioTrack.PLAYSTATE_PLAYING) {
 				mPlayStateView.setText(R.string.play);
 				
@@ -372,6 +383,12 @@ public class VoiceListActivity extends Activity
 				RefreshAllPlayInfo(mCurPlayMusicInfo);
 			}
 			break;
+		case R.id.settings:
+			Intent in = new Intent(VoiceListActivity.this, SettingActivity.class);
+			startActivity(in);
+//			in.putExtra(SETTINGS_PARAMS, mSettingsDetails);
+//			startActivityForResult(in, SETTINGS_REQUEST_CODE);
+			break;
 		default:
 			break;
 		}
@@ -407,11 +424,11 @@ public class VoiceListActivity extends Activity
 
 	public void onItemClick(AdapterView<?> parent, View view, int position,
 			long id) {
-		Toast.makeText(VoiceListActivity.this, "OnItemClick", Toast.LENGTH_LONG).show();		
+		//Toast.makeText(VoiceListActivity.this, "OnItemClick", Toast.LENGTH_LONG).show();		
 	}
 
 	public void onDownLoadBegin(MusicInfoModel info) {
-		info.m_nIndex = getListMusicInfoSize();
+//		info.m_sIndex = getListMusicInfoSize();
 		mListMusicInfoModels.add(info);
     	mMusicAdapter.setList(mListMusicInfoModels);
 	}
@@ -440,6 +457,17 @@ public class VoiceListActivity extends Activity
     	RefreshAllPlayInfo(item);
     	mMusicAdapter.notifyDataSetChanged();
 //    	mMusicAdapter.setList(mListMusicInfoModels);
+	}
+	public void onDownloadError(MusicInfoModel info) {
+		MusicInfoModel item = getItemByName(info.m_strName);
+    	item.m_nDownloadStatus = info.m_nDownloadStatus;
+    	item.m_nDownPercent = info.m_nDownPercent;
+    	
+    	item.m_nDownLoadOffset = info.m_nDownLoadOffset;
+    	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
+    	
+    	RefreshAllPlayInfo(item);
+    	mMusicAdapter.notifyDataSetChanged();
 	}
 	
 	public int getListMusicInfoSize(){

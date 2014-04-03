@@ -7,6 +7,7 @@ public class NetHeaderModel {
 	public static final byte FUNCTION_RECEIVE_LINK  = 0;  //�?��握手
 	public static final byte FUNCTION_RECEIVE_START = 1;  //文件传输�?��
 	public static final byte FUNCTION_RECEIVE_END   = 2;  //文件传输结束
+	public static final byte FUNCTION_RESEND_INFO   = 3;  //文件续传
 	
 	public static final byte FUNCTION_SEND_TIME_INFO  = 0;  //收端发送开机信息
 	public static final byte FUNCTION_FILE_OK = 1;  //接收文件正确
@@ -23,8 +24,8 @@ public class NetHeaderModel {
 	public NetHeaderModel(int len, byte func){
 		mStif = (short)0xfafa;
 		mLength = len;
-		mSid = 0;
-		mDid = (byte) 0xA0;
+		mSid = (byte) 0xA0;
+		mDid = 0;
 		mFunction = func;
 		mVer = 0;
 	}

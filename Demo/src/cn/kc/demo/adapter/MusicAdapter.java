@@ -50,7 +50,7 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 			holder = (ViewHolder) convertView.getTag();
 		}
 		
-		holder.indexView.setText("" + info.m_nIndex);		
+		holder.indexView.setText("" + info.m_sIndex);		
 		holder.nameView.setText(info.m_strName);
 		
 		if( info.m_nDownloadStatus == MusicInfoModel.DOWNLOAD_STATUS_END){
@@ -71,6 +71,13 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 		case MusicInfoModel.DOWNLOAD_STATUS_END:
 			holder.statusView.setText(R.string.receive_success);
 //			statusView.setBackground(background);
+			break;
+		case MusicInfoModel.DOWNLOAD_STATUS_LOCAL:
+			holder.statusView.setVisibility(View.GONE);
+			holder.processBar.setVisibility(View.GONE);
+			break;
+		case MusicInfoModel.DOWNLOAD_STATUS_ERROR:
+			holder.statusView.setText(R.string.receive_error);
 			break;
 		}
 		return convertView;

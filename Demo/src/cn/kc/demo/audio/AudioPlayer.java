@@ -128,12 +128,12 @@ public class AudioPlayer implements Runnable{
 			default:
 				break;
 			}
-			mIsInited = true;
+			setIsInited(true);
 		} catch (FileNotFoundException e) {
-			mIsInited = false;
+			setIsInited(false);
 			e.printStackTrace();
 		} catch (IOException e) {
-			mIsInited = false;
+			setIsInited(false);
 			e.printStackTrace();
 		}
 		
@@ -278,12 +278,27 @@ public class AudioPlayer implements Runnable{
 			
 			mAudioTrack.release();
 		}
+
+		if( mAdpcmDecoder != null){
+			
+		}
+
+		if(mG7221Decoder != null)
+			mG7221Decoder.uninit();
 	}	
 	
 	public void recycle(){
 		release();
-		if( mThread != null)
-			mThread.interrupt();
+		if( mThread != null){
+			try {
+//				mThread.join();
+				mThread.interrupt();
+                //Log.v(TAG, "audio thread exit");
+            } catch(Exception e) {
+                //Log.v(TAG, "Problem stopping audio thread: " + e);
+            }
+			mThread = null;
+		}
 	}
 	
 	public void run() {
@@ -402,6 +417,14 @@ public class AudioPlayer implements Runnable{
 
 	public int getMinBufSize() {
 		return mMinBufSize;
+	}
+
+	public boolean isInited() {
+		return mIsInited;
+	}
+
+	public void setIsInited(boolean mIsInited) {
+		this.mIsInited = mIsInited;
 	}
 
 }

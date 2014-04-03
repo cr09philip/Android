@@ -6,11 +6,13 @@ import java.util.Calendar;
 public class SendTimeInfoModel extends NetHeaderModel{
 
 	public byte m_bChannels;
+	public byte m_bCodeType;
 	
-	public SendTimeInfoModel(byte channels){
+	public SendTimeInfoModel(byte code_type, byte channels){
 		super(7, NetHeaderModel.FUNCTION_SEND_TIME_INFO);
 		
 		m_bChannels = channels;
+		m_bCodeType = code_type;
 	}
 	
 	public byte[] toBinStream(){
@@ -30,7 +32,7 @@ public class SendTimeInfoModel extends NetHeaderModel{
 		resBuf[nIndex++] = (byte) c.get(Calendar.MINUTE);//获取当前的分钟数
 		resBuf[nIndex++] = (byte) c.get(Calendar.SECOND);//获取当前的分钟数
 
-		resBuf[nIndex++] = m_bChannels;
+		resBuf[nIndex++] = (byte) (m_bChannels | (m_bCodeType << 4));
 		
 		return resBuf;
 	}

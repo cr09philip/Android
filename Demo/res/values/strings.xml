@@ -5,6 +5,7 @@
     <string name="app_name">Demo</string>
 
     <string name="login">登陆</string>
+    <string name="settings">设置</string>
     <string name="devices_list">设备列表</string>
     <string name="voice_list">音频列表</string>
     <string name="devices_name">设备**</string>
@@ -17,13 +18,16 @@
     <string name="stop">停止</string>
     <string name="play_end">播放完毕</string>
     
+    <string name="default_time">00:00</string>
     <string name="play_time">%1$02d:%2$02d</string>
     
     <string name="download_progress">已接收    %1$d%%</string>
     <string name="download_speed">下载速率   %1$dKb/s</string>
     
+    <string name="select_nothing">未选中任何音频文件</string>
     <string name="receive_progress">已接收   %1$d%%</string>    
     <string name="receive_success">已接收完成</string>
+    <string name="receive_error">接收失败</string>
     
     <string name="voice_index">n</string>
 
@@ -31,16 +35,11 @@
     <string name="code_adpcm">adpcm</string>
     <string name="code_g722">g.722.1</string>
      
-    <string name="channel_type">声道</string>
-    <string name="channel_mono">单声道</string>
-    <string name="channel_stereo">双声道</string>
+    <string name="channel_type">声道设置：</string>
+    <string name="channel_mono">\t单声道\t</string>
+    <string name="channel_stereo">\t双声道\t</string>
     
-    <string name="bit_rate">码率</string>
-    <string name="bit_rate_7">7KHz</string>
-    <string name="bit_rate_14">14KHz</string>
-    
-    <string name="bind_width">带宽</string>
-    <string name="bind_width_24">24Kbit</string>
-    <string name="bind_width_32">32Kbit</string>
-    <string name="bind_width_48">48Kbit</string>
+    <string name="g_722_1_setting">g722.1编码设置：</string>
+    <string name="band_width">带宽：</string>    
+    <string name="bit_rate">码率：</string>
 </resources>
