@@ -42,7 +42,7 @@
             android:layout_gravity="center"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
-            android:background="@drawable/download_btn" />
+            android:background="@drawable/play_start_btn" />
 
         <ImageView
             android:id="@+id/music_btn"

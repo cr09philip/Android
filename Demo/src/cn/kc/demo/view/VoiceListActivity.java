@@ -179,6 +179,10 @@ public class VoiceListActivity extends Activity
 		mSettingBtn.setOnClickListener(VoiceListActivity.this);
 	}
 	
+	public void refreshListView(){
+		mMusicAdapter.notifyDataSetChanged();
+	}
+	
 	public void RefreshAllPlayInfo(MusicInfoModel info){		
 		mPlayInfoTxt.setText(info.m_strName);		
 		
@@ -237,7 +241,7 @@ public class VoiceListActivity extends Activity
 	        }
 	        else if (f.isDirectory() ){  //忽略点文件（隐藏文件/文件夹）
 	        	if(f.getPath().indexOf("/.") == -1)
-	        		break;
+	        		continue;
 	        	
 	        	if(IsIterative)
 	        		GetFiles(f.getPath(), Extension, IsIterative);
@@ -370,6 +374,8 @@ public class VoiceListActivity extends Activity
 					if( mCurPlayMusicInfo.m_strName.equals(thisInfo.m_strName)){
 						break;
 					}else{
+						mCurPlayMusicInfo.setIsPlaying(false) ;
+						
 						if( mPlayer.getPlayState() != AudioTrack.PLAYSTATE_STOPPED){
 							mPlayer.stop();
 							thisInfo.m_nCurProgress = 0;
@@ -379,8 +385,17 @@ public class VoiceListActivity extends Activity
 					}
 				}
 
-				mPlayer.init(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
+				mCurPlayMusicInfo.setIsPlaying(true) ;
+				refreshListView();
 				RefreshAllPlayInfo(mCurPlayMusicInfo);
+
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				mPlayer.init(mAppPath + "/" + mCurPlayMusicInfo.m_strName);
 			}
 			break;
 		case R.id.settings:
@@ -431,6 +446,7 @@ public class VoiceListActivity extends Activity
 //		info.m_sIndex = getListMusicInfoSize();
 		mListMusicInfoModels.add(info);
     	mMusicAdapter.setList(mListMusicInfoModels);
+//    	refreshListView();
 	}
 
 	public void onDownLoadEnd(MusicInfoModel info) {
@@ -442,7 +458,7 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
     	
     	RefreshAllPlayInfo(item);
-    	mMusicAdapter.notifyDataSetChanged();
+    	refreshListView();
 //    	mMusicAdapter.setList(mListMusicInfoModels);
 	}
 
@@ -455,7 +471,7 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
     	
     	RefreshAllPlayInfo(item);
-    	mMusicAdapter.notifyDataSetChanged();
+    	refreshListView();
 //    	mMusicAdapter.setList(mListMusicInfoModels);
 	}
 	public void onDownloadError(MusicInfoModel info) {
@@ -467,7 +483,7 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = info.m_nDownLoadSpeed;
     	
     	RefreshAllPlayInfo(item);
-    	mMusicAdapter.notifyDataSetChanged();
+    	refreshListView();
 	}
 	
 	public int getListMusicInfoSize(){

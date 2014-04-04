@@ -28,8 +28,16 @@ public class MusicInfoModel {
 	public int m_nDownLoadSpeed; // KBytes/s
 	
 	public boolean m_isNeedContuinue;
-	public boolean m_isPlaying;
+	private boolean m_isPlaying;
 	
+	public boolean isPlaying() {
+		return m_isPlaying;
+	}
+
+	public void setIsPlaying(boolean isPlaying) {
+		this.m_isPlaying = isPlaying;
+	}
+
 	public MusicInfoModel(){
 		m_strName = null;
 		

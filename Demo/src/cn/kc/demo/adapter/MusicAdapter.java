@@ -53,10 +53,10 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 		holder.indexView.setText("" + info.m_sIndex);		
 		holder.nameView.setText(info.m_strName);
 		
-		if( info.m_nDownloadStatus == MusicInfoModel.DOWNLOAD_STATUS_END){
+		if( info.isPlaying()){
 			holder.downBtn.setBackgroundResource(R.drawable.play_satrt_select);
 		}else{
-			holder.downBtn.setBackgroundResource(R.drawable.download_btn);
+			holder.downBtn.setBackgroundResource(R.drawable.play_start_btn);
 		}
 		
 		holder.processBar.setProgress(info.m_nDownPercent);
