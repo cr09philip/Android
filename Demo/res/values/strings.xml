@@ -31,7 +31,7 @@
     
     <string name="voice_index">n</string>
 
-    <string name="code_type">编码方式</string>
+    <string name="code_type">编码方式：</string>
     <string name="code_adpcm">adpcm</string>
     <string name="code_g722">g.722.1</string>
      

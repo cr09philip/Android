@@ -12,6 +12,7 @@ import android.os.Message;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.utils.CodeUtil;
 import cn.kc.demo.utils.WifiAdmin;
+import cn.kc.demo.utils.WifiUtil;
 import cn.kc.demo.view.VoiceListActivity;
 
 // we need a socket server to receive msg.
@@ -25,7 +26,7 @@ public class KcSocketServer implements Runnable {
 	private ArrayList<KcReceiveMsgThread> mListReceiverMsg;
 	ServerSocket mServerSocket;
 	Handler mHandler;
-	private byte[] mAddr;
+	private String mAddr;
 	private int mPort;
 	
 	public KcSocketServer(Context context, String path){
@@ -49,9 +50,10 @@ public class KcSocketServer implements Runnable {
 //				InetSocketAddress socketAddr = (InetSocketAddress) mServerSocket.getLocalSocketAddress(); 
 //				byte[] addr = socketAddr.getAddress().getAddress();
 				
-				WifiAdmin wifiAdmin = new WifiAdmin(mContext);
-				
-				mAddr =  CodeUtil.int2bytes(wifiAdmin.getIPAddress(), false);
+//				WifiAdmin wifiAdmin = new WifiAdmin(mContext);
+//				
+//				mAddr =  CodeUtil.int2bytes(wifiAdmin.getIPAddress(), false);
+				mAddr = WifiUtil.getHostAddress();
 				mPort = mServerSocket.getLocalPort();
 				mHandler.sendEmptyMessage(DownloadInfoHandler.GET_HOST_IP_ADDRESS_INFO);
 			}
@@ -71,7 +73,7 @@ public class KcSocketServer implements Runnable {
 		}
 	}
 	public interface OnServerSetupListener{
-		void onReturnServerAddress(byte[] addr, int port);
+		void onReturnServerAddress(String addr, int port);
 	}
 	public interface OnDownLoadStateChangedListener{
 		void onDownLoadBegin(MusicInfoModel info);

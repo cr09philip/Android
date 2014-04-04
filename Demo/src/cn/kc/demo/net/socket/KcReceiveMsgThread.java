@@ -68,9 +68,16 @@ public class KcReceiveMsgThread implements Runnable {
 				switch (header.mFunction) {
 				case NetHeaderModel.FUNCTION_RECEIVE_LINK:
 					// 返回系統信息 FUNCTION_SEND_TIME_INFO
-					SendTimeInfoModel timeModel = new SendTimeInfoModel(
-							mContext.mSettingsDetails.getCode_type(),
-							mContext.mSettingsDetails.getChannel_type());
+					SendTimeInfoModel timeModel = null;
+					if( mContext.getSettingsDetails().getCode_type() == 1){//g722.1
+						timeModel =
+								new SendTimeInfoModel(	mContext.getSettingsDetails().getChannel_type(),
+														mContext.getSettingsDetails().getBand_width_value(),
+														mContext.getSettingsDetails().getBit_rate_value() );
+					}else{
+						timeModel = new SendTimeInfoModel(mContext.getSettingsDetails().getChannel_type());
+					}
+					
 					outputStream.write(timeModel.toBinStream());
 					outputStream.flush();
 					

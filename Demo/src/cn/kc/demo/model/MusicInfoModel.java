@@ -28,6 +28,7 @@ public class MusicInfoModel {
 	public int m_nDownLoadSpeed; // KBytes/s
 	
 	public boolean m_isNeedContuinue;
+	public boolean m_isPlaying;
 	
 	public MusicInfoModel(){
 		m_strName = null;
@@ -42,6 +43,7 @@ public class MusicInfoModel {
 		m_nDownLoadSpeed = 
 		m_nErrorTimes = 0;
 		m_isNeedContuinue = false;
+		m_isPlaying = false;
 	}
 	
 	public MusicInfoModel(short index, String path, int duration ){		
@@ -58,6 +60,7 @@ public class MusicInfoModel {
 		
 		m_nDownLoadSpeed = 0;
 		m_isNeedContuinue = false;
+		m_isPlaying = false;
 	}
 	
 	public static int getMusicFileDuration(String fullPath){

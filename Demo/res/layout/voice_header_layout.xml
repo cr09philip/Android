@@ -25,6 +25,7 @@
         android:src="@drawable/line_bg" />
 
     <TextView
+        android:id="@+id/voice_list"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
         android:layout_marginRight="20dp"
@@ -33,4 +34,24 @@
         android:text="@string/voice_list"
         android:textColor="@color/white"
         android:textSize="8pt" />
+    
+    <ImageView
+        android:id="@+id/wifi_level"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_gravity="center"
+        android:layout_marginLeft="10dp"
+        android:layout_marginRight="8dp"
+        android:layout_alignParentRight="true"
+        android:background="@drawable/wifi_four" />
+    
+    <ImageView
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
+        android:layout_toLeftOf="@id/wifi_level"
+        android:contentDescription="@string/app_name"
+        android:scaleType="fitXY"
+        android:src="@drawable/line_bg" />
 </RelativeLayout>

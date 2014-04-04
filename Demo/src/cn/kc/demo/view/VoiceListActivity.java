@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
+import android.text.InputFilter.LengthFilter;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -85,8 +86,9 @@ public class VoiceListActivity extends Activity
 	private KcSocketServer mSocketServer;
 	private Button mSettingBtn;
 	
-	public SettingsSp mSettingsDetails;
-	
+	public SettingsSp getSettingsDetails() {
+		return SettingsSp.Instance().init(this);
+	}
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG,"onCreate");
@@ -144,9 +146,7 @@ public class VoiceListActivity extends Activity
 		mSettingBtn = (Button) findViewById(R.id.settings);
 	}
 
-	private void initData() {
-		mSettingsDetails = SettingsSp.Instance().init(this);
-		
+	private void initData() {		
 		mAppPath = FileUtil.getStoragePath(VoiceListActivity.this) + "/" +  FOLDER_NAME ;
 		
 		if( !FileUtil.IsFileExist(mAppPath) ){
@@ -266,7 +266,7 @@ public class VoiceListActivity extends Activity
 			newInfo.m_nDownloadStatus = fileHeader.getFileStatus();
 			newInfo.m_nDownPercent = fileHeader.getFileDownloadPercent();
 			
-			if(fileHeader.m_nLength != fileHeader.m_nOffset)
+			if(fileHeader.m_nLength > fileHeader.m_nOffset)
 				newInfo.m_isNeedContuinue = true;
 			
 		} catch (FileNotFoundException e) {
@@ -524,13 +524,7 @@ public class VoiceListActivity extends Activity
 			mSocketServer.recycle();
 	}
 
-	public void onReturnServerAddress(byte[] addr, int port) {
-		String str = String.format("Ip:%d.%d.%d.%d port: %d", 
-				CodeUtil.getUnsignedByte(addr[0]),
-				CodeUtil.getUnsignedByte(addr[1]),
-				CodeUtil.getUnsignedByte(addr[2]),
-				CodeUtil.getUnsignedByte(addr[3]),
-				port);
-		Toast.makeText(VoiceListActivity.this, str, 1000).show();
+	public void onReturnServerAddress(String addr, int port) {
+		Toast.makeText(VoiceListActivity.this, addr + " : " + port, Toast.LENGTH_LONG).show();
 	}
 }

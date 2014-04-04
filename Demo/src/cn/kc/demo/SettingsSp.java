@@ -29,30 +29,26 @@ public class SettingsSp {
 		return instance;
 	}
 	public byte getCode_type() {
-		return (byte) sp.getInt(CODE_TYPE, 0);
+		return (byte) sp.getInt(CODE_TYPE, 1);
 	}
 	public void setCode_type(byte type) {
 		if(type != 0 && type != 1)
-			ed.putInt(CODE_TYPE, 0);
+			ed.putInt(CODE_TYPE, 1);
 		else
 			ed.putInt(CODE_TYPE, type);
 		
 		ed.commit();
 	}
 	public byte getChannel_type() {
-		return (byte) sp.getInt(CHANNEL_TYPE, 1);
+		return (byte) sp.getInt(CHANNEL_TYPE, 0);
 	}
 	public void setChannel_type(byte type) {
-		int n = getChannel_type();
-		
 		if(type != 0 && type != 1)
-			ed.putInt(CHANNEL_TYPE, 1);
+			ed.putInt(CHANNEL_TYPE, 0);
 		else
 			ed.putInt(CHANNEL_TYPE, type);
 		
 		ed.commit();
-
-		n = getChannel_type();
 	}
 	public byte getBand_width_value() {
 		return (byte) sp.getInt(BAND_WIDTH_VALUE, 7);
