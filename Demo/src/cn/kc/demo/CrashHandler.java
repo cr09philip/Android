@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import cn.kc.demo.utils.FileUtil;
+import cn.kc.demo.view.FolderListActivity;
 import cn.kc.demo.view.VoiceListActivity;
 
 import android.content.Context;
@@ -33,7 +34,8 @@ import android.widget.Toast;
  *  
  */  
 public class CrashHandler implements UncaughtExceptionHandler {  
-    private static final String TAG = "CrashHandler";  
+    private static final String TAG = "CrashHandler";
+	public static final String BUG_FOLDER = "bugreport";  
     private Thread.UncaughtExceptionHandler mDefaultHandler;// 系统默认的UncaughtException处理类   
     private static CrashHandler INSTANCE = new CrashHandler();// CrashHandler实例   
     private Context mContext;// 程序的Context对象   
@@ -173,7 +175,7 @@ public class CrashHandler implements UncaughtExceptionHandler {
                 Environment.MEDIA_MOUNTED)) {  
             try {  
                 File dir = new File(
-                		FileUtil.getStoragePath(mContext) + "/" +  VoiceListActivity.FOLDER_NAME + "/bugreport");  
+                		FileUtil.getStoragePath(mContext) + "/" +  FolderListActivity.FOLDER_NAME + "/" + BUG_FOLDER);  
                 Log.i("CrashHandler", dir.toString());  
                 if (!dir.exists())  
                     dir.mkdir();  

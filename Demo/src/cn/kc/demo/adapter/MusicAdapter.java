@@ -14,11 +14,14 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 	private VoiceListActivity mContext;
 	
 	public class ViewHolder{
-		TextView indexView;
-		TextView nameView;
-		Button downBtn;
-		ProgressBar processBar;
-		TextView statusView;
+		public TextView indexView;
+		public TextView nameView;
+		public Button downBtn;
+		public ProgressBar processBar;
+		public TextView statusView;
+		
+		public int position;
+		public MusicInfoModel info;
 	}
 	public MusicAdapter(Activity context) {
 		super(context);
@@ -42,21 +45,26 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 			holder.downBtn = (Button) convertView.findViewById(R.id.music_static_btn);			
 			holder.processBar = (ProgressBar)convertView.findViewById(R.id.download_progress_bar);			
 			holder.statusView = (TextView)convertView.findViewById(R.id.receive_status_view);
+			holder.position = position;
+			holder.info = info;
 			
 //			holder.nameView.setOnClickListener(mContext);
 			convertView.setOnClickListener(mContext);
 			convertView.setTag(holder);
 		}else{
 			holder = (ViewHolder) convertView.getTag();
+			holder.position = position;
+			holder.info = info;
+			convertView.setTag(holder);
 		}
 		
-		holder.indexView.setText("" + info.m_sIndex);		
+		holder.indexView.setText(String.valueOf(position + 1));	//序号从1开始
 		holder.nameView.setText(info.m_strName);
 		
-		if( info.isPlaying()){
+		if( info.m_nDownloadStatus == MusicInfoModel.DOWNLOAD_STATUS_END){
 			holder.downBtn.setBackgroundResource(R.drawable.play_satrt_select);
 		}else{
-			holder.downBtn.setBackgroundResource(R.drawable.play_start_btn);
+			holder.downBtn.setBackgroundResource(R.drawable.download_btn);
 		}
 		
 		holder.processBar.setProgress(info.m_nDownPercent);

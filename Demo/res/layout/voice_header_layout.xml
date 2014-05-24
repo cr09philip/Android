@@ -35,16 +35,29 @@
         android:textColor="@color/white"
         android:textSize="8pt" />
     
-    <ImageView
+    <LinearLayout
         android:id="@+id/wifi_level"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentTop="true"
         android:layout_centerVertical="true"
+        android:layout_alignParentRight="true"
         android:layout_gravity="center"
         android:layout_marginLeft="10dp"
         android:layout_marginRight="8dp"
-        android:layout_alignParentRight="true"
-        android:background="@drawable/wifi_four" />
+        android:orientation="vertical">
+        <ImageView
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:background="@drawable/wifi_four" />
+        
+        <ImageView
+	        android:layout_width="wrap_content"
+	        android:layout_height="wrap_content"
+	        android:id="@+id/connect_state"
+	        android:src="@drawable/device_unconnect" />
+    </LinearLayout>
+    
     
     <ImageView
         android:layout_width="wrap_content"

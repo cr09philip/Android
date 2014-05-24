@@ -2,17 +2,23 @@
 <resources>
 
     <string name="hello">Hello World, DemoActivity!</string>
-    <string name="app_name">Demo</string>
-
+    <string name="app_name">猝发式侦听接收软件</string>
+    <string name="app_name_en">CFZT</string>
+    
     <string name="login">登陆</string>
     <string name="settings">设置</string>
     <string name="devices_list">设备列表</string>
-    <string name="voice_list">音频列表</string>
+    <string name="folder_list">文件夹列表</string>
+    <string name="voice_list">%1$s音频列表</string>
     <string name="devices_name">设备**</string>
     <string name="devices_link">已连接</string>
     <string name="devices_no_link">未连接</string>
     <string name="null_str"></string>
     
+    <string name="alert_dialog_ok">确定</string>
+    <string name="alert_dialog_cancel">取消</string>    
+    <string name="alert_dialog_text_entry">是否创建新文件夹</string>
+    <string name="alert_dialog_recover_title">存在重名文件%1$s,是否覆盖？</string>
     <string name="play">正在播放</string>
     <string name="pause">暂停</string>
     <string name="stop">停止</string>
@@ -22,7 +28,10 @@
     <string name="play_time">%1$02d:%2$02d</string>
     
     <string name="download_progress">已接收    %1$d%%</string>
-    <string name="download_speed">下载速率   %1$dKb/s</string>
+    <string name="download_total_nums">文件总数 （%1$d）</string>
+    <string name="download_index_nums">\t%1$d/%2$d</string>
+    <string name="download_speed_kbs">下载速率   %1$dKb/s</string>
+    <string name="download_speed">下载速率   %1$.2fMb/s</string>
     
     <string name="select_nothing">未选中任何音频文件</string>
     <string name="receive_progress">已接收   %1$d%%</string>    
@@ -32,8 +41,8 @@
     <string name="voice_index">n</string>
 
     <string name="code_type">编码方式：</string>
-    <string name="code_adpcm">adpcm</string>
-    <string name="code_g722">g.722.1</string>
+    <string name="code_adpcm">\tadpcm\t</string>
+    <string name="code_g722">\tg.722.1\t</string>
      
     <string name="channel_type">声道设置：</string>
     <string name="channel_mono">\t单声道\t</string>

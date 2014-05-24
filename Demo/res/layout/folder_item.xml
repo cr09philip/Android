@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/folder_name"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center_horizontal"
+    android:gravity="center"
+    android:text="@string/devices_no_link"
+    android:textColor="@color/device_list_text"
+    android:textSize="8pt"
+    android:scrollHorizontally="true"
+    android:singleLine="true" />

@@ -42,7 +42,7 @@
             android:layout_gravity="center"
             android:layout_marginLeft="12dp"
             android:layout_marginRight="12dp"
-            android:background="@drawable/play_start_btn" />
+            android:background="@drawable/download_btn" />
 
         <ImageView
             android:id="@+id/music_btn"
@@ -67,7 +67,9 @@
             android:layout_toRightOf="@id/music_btn"
             android:text="@string/devices_name"
             android:textColor="@color/white"
-            android:textSize="8pt" />
+            android:textSize="8pt" 
+            android:scrollHorizontally="true"
+            android:singleLine="true" />
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="fill_parent"

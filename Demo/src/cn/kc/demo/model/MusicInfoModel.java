@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.List;
 
 public class MusicInfoModel {
 	public static final int DOWNLOAD_STATUS_BEGIN = 0;
@@ -28,16 +29,11 @@ public class MusicInfoModel {
 	public int m_nDownLoadSpeed; // KBytes/s
 	
 	public boolean m_isNeedContuinue;
-	private boolean m_isPlaying;
+	public boolean m_isPlaying;
 	
-	public boolean isPlaying() {
-		return m_isPlaying;
-	}
-
-	public void setIsPlaying(boolean isPlaying) {
-		this.m_isPlaying = isPlaying;
-	}
-
+	public long mTotalBytes;
+	public long mStartNanoSecs;
+	
 	public MusicInfoModel(){
 		m_strName = null;
 		
@@ -52,6 +48,9 @@ public class MusicInfoModel {
 		m_nErrorTimes = 0;
 		m_isNeedContuinue = false;
 		m_isPlaying = false;
+		
+		mTotalBytes = 0;
+		mStartNanoSecs = 0;
 	}
 	
 	public MusicInfoModel(short index, String path, int duration ){		
@@ -69,6 +68,9 @@ public class MusicInfoModel {
 		m_nDownLoadSpeed = 0;
 		m_isNeedContuinue = false;
 		m_isPlaying = false;
+		
+		mTotalBytes = 0;
+		mStartNanoSecs = 0;
 	}
 	
 	public static int getMusicFileDuration(String fullPath){
@@ -94,5 +96,45 @@ public class MusicInfoModel {
 		}
 		
 		return nRes;
+	}
+	public static MusicInfoModel GetMusicInfoModelFromFile(File file, int index){
+		MusicInfoModel newInfo = null;
+		FileInputStream mInput = null;
+		try {
+			newInfo = new MusicInfoModel();
+			mInput = new FileInputStream( file );
+			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
+			mInput.read(header, 0, FileHeader.FILE_HEADER_SIZE);
+
+			FileHeader fileHeader = new FileHeader(header, 0);
+			
+			newInfo.m_strName = file.getName();
+			
+			newInfo.m_sIndex = (short) index;
+			newInfo.m_nDownLoadOffset = fileHeader.m_nOffset;
+			newInfo.m_nDuration = fileHeader.m_nDuration;
+			newInfo.m_nDownLoadSpeed = 0;
+			
+			newInfo.m_nDownloadStatus = fileHeader.getFileStatus();
+			newInfo.m_nDownPercent = fileHeader.getFileDownloadPercent();
+			
+			if(fileHeader.m_nLength > fileHeader.m_nOffset)
+				newInfo.m_isNeedContuinue = true;
+			
+		} catch (FileNotFoundException e) {
+			newInfo = null;
+			e.printStackTrace();
+		} catch(IOException e){
+			newInfo = null;
+			e.printStackTrace();
+		}finally{
+			try {
+				mInput.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		
+		return newInfo;
 	}
 }

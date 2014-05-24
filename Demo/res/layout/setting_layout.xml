@@ -41,7 +41,8 @@
                 android:checked="true"
                 android:text="@string/code_adpcm"
                 android:textColor="@color/white"
-                android:textSize="8pt" />
+                android:textSize="10pt" 
+                android:button="@drawable/radio_style"/>
 
             <RadioButton
                 android:id="@+id/code_g722"
@@ -50,7 +51,8 @@
                 android:layout_marginLeft="12dp"
                 android:text="@string/code_g722"
                 android:textColor="@color/white"
-                android:textSize="8pt" />
+                android:textSize="10pt"
+                android:button="@drawable/radio_style" />
         </RadioGroup>
     </LinearLayout>
 
@@ -86,7 +88,8 @@
                 android:layout_marginLeft="12dp"
                 android:text="@string/channel_mono"
                 android:textColor="@color/white"
-                android:textSize="8pt" />
+                android:textSize="10pt" 
+                android:button="@drawable/radio_style"/>
 
             <RadioButton
                 android:id="@+id/channel_stereo"
@@ -96,7 +99,8 @@
                 android:checked="true"
                 android:text="@string/channel_stereo"
                 android:textColor="@color/white"
-                android:textSize="8pt" />
+                android:textSize="10pt" 
+                android:button="@drawable/radio_style"/>
         </RadioGroup>
     </LinearLayout>
 
@@ -124,7 +128,7 @@
             android:layout_width="fill_parent"
             android:layout_height="60dp"
             android:layout_marginTop="3dp"
-            android:background="@drawable/listview_bg"
+            android:background="@drawable/spinner_bg"
             android:gravity="bottom" >
 
             <TextView
@@ -140,14 +144,6 @@
                 android:textColor="@color/white"
                 android:textSize="8pt" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="fill_parent"
-                android:layout_toRightOf="@id/band_width"
-                android:contentDescription="@string/app_name"
-                android:scaleType="fitXY"
-                android:src="@drawable/line_bg" />
-
             <Button
                 android:id="@+id/band_width_static_btn"
                 android:layout_width="wrap_content"
@@ -156,25 +152,22 @@
                 android:layout_centerVertical="true"
                 android:layout_gravity="center"
                 android:layout_marginLeft="12dp"
-                android:layout_marginRight="12dp"
-                android:background="@drawable/pull" />
+                android:layout_marginRight="20dp"
+                android:background="@drawable/spinner_pull"/>
 
             <Spinner
                 android:id="@+id/band_width_value"
+       			android:drawSelectorOnTop="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_toLeftOf="@id/band_width_static_btn"
                 android:layout_toRightOf="@id/band_width"
                 android:background="#00ffffff"
-                android:spinnerMode="dropdown" />
+                android:popupBackground="#c7c7c7" 
+                android:spinnerMode="dropdown" 
+                android:dropDownVerticalOffset="0dp"
+                />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="fill_parent"
-                android:layout_toRightOf="@id/band_width_value"
-                android:contentDescription="@string/app_name"
-                android:scaleType="fitXY"
-                android:src="@drawable/line_bg" />
         </RelativeLayout>
 
         <!-- 码率 bit_rate -->
@@ -184,7 +177,7 @@
             android:layout_width="fill_parent"
             android:layout_height="60dp"
             android:layout_marginTop="3dp"
-            android:background="@drawable/listview_bg"
+            android:background="@drawable/spinner_bg"
             android:gravity="bottom" >
 
             <TextView
@@ -200,14 +193,6 @@
                 android:textColor="@color/white"
                 android:textSize="8pt" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="fill_parent"
-                android:layout_toRightOf="@id/bit_rate"
-                android:contentDescription="@string/app_name"
-                android:scaleType="fitXY"
-                android:src="@drawable/line_bg" />
-
             <Button
                 android:id="@+id/bit_rate_static_btn"
                 android:layout_width="wrap_content"
@@ -216,25 +201,21 @@
                 android:layout_centerVertical="true"
                 android:layout_gravity="center"
                 android:layout_marginLeft="12dp"
-                android:layout_marginRight="12dp"
-                android:background="@drawable/pull" />
+                android:layout_marginRight="20dp"
+                android:background="@drawable/spinner_pull" />
 
             <Spinner
                 android:id="@+id/bit_rate_value"
+       			android:drawSelectorOnTop="true"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_toLeftOf="@id/bit_rate_static_btn"
                 android:layout_toRightOf="@id/bit_rate"
                 android:background="#00ffffff"
-                android:spinnerMode="dropdown" />
+                android:popupBackground="#c7c7c7" 
+                android:spinnerMode="dropdown"
+                android:dropDownVerticalOffset="0dp" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="fill_parent"
-                android:layout_toRightOf="@id/bit_rate_value"
-                android:contentDescription="@string/app_name"
-                android:scaleType="fitXY"
-                android:src="@drawable/line_bg" />
         </RelativeLayout>
     </LinearLayout>
 

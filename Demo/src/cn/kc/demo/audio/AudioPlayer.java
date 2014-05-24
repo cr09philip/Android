@@ -54,6 +54,8 @@ public class AudioPlayer implements Runnable{
 
 	private G7221Decoder mG7221Decoder;
 
+	private int mDesiredFrames;
+
 	public AudioPlayer(Context context){		
 		mMaxAudioVolume = AudioTrack.getMaxVolume();
 		mMinAudioVolume = AudioTrack.getMinVolume();
@@ -100,7 +102,8 @@ public class AudioPlayer implements Runnable{
 	 * int this method, u showld call void initAudioTrack(int frequency, int channels,int sampBit)
 	 * it used to new a AudioTrack and start a thread to play audio
 	 */
-	public void init(String path){		
+	public boolean init(String path){
+		boolean ret = false;
 		try {
 			mInput = new FileInputStream( new File(path) );
 			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
@@ -129,21 +132,21 @@ public class AudioPlayer implements Runnable{
 				break;
 			}
 			setIsInited(true);
+			ret = true;
 		} catch (FileNotFoundException e) {
 			setIsInited(false);
 			e.printStackTrace();
+			ret = false;
 		} catch (IOException e) {
 			setIsInited(false);
 			e.printStackTrace();
+			ret = false;
 		}
 		
-		if(mHeader != null){
-			mFrequency = mHeader.m_bSamples * 1000;
-			mChannel = mHeader.m_bChannels == 0? AudioFormat.CHANNEL_OUT_MONO:AudioFormat.CHANNEL_OUT_STEREO;
-			mSampBit = mHeader.m_bBitsPerSample == 16?AudioFormat.ENCODING_PCM_16BIT:AudioFormat.ENCODING_PCM_8BIT;
-		}
+		if(ret)
+			initAudioTrack();
 		
-		initAudioTrack();
+		return ret;
 	}
 
 	protected int getBufferToPlay(byte[] buf, int flag){
@@ -152,6 +155,9 @@ public class AudioPlayer implements Runnable{
 			byte[] tmpBuf = new byte[mHeader.m_sBlock];
 			int len = mInput.read(tmpBuf, 0, mHeader.m_sBlock);
 
+			System.out.println("===>"+flag +"===>"+len);
+			if(len == -1)
+				return -1;
 			//解码
 			switch (mHeader.m_bFormatTag) {
 			case 0://ADPCM
@@ -176,7 +182,7 @@ public class AudioPlayer implements Runnable{
 				nRes = mHeader.m_sBlock;
 				break;
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		return nRes;
@@ -194,13 +200,26 @@ public class AudioPlayer implements Runnable{
 		
 		if (mAudioTrack != null) {
 			release();
+			mAudioTrack = null;
 		}
 
+		if(mHeader != null){
+			mFrequency = mHeader.m_bSamples * 1000;
+			mChannel = mHeader.m_bChannels == 0? AudioFormat.CHANNEL_OUT_MONO:AudioFormat.CHANNEL_OUT_STEREO;
+			mSampBit = mHeader.m_bBitsPerSample == 16?AudioFormat.ENCODING_PCM_16BIT:AudioFormat.ENCODING_PCM_8BIT;
+		}
+		
 		// 获得构建对象的最小缓冲区大小
-		mMinBufSize = AudioTrack.getMinBufferSize(mFrequency, mChannel, mSampBit);
-
+		int frameSize = (mHeader.m_bChannels ==0 ? 1 : 2) * (mHeader.m_bBitsPerSample == 16 ? 2 : 1);
+		
+		mDesiredFrames = Math.max(mHeader.m_sBlock,
+				(AudioTrack.getMinBufferSize(mFrequency, mChannel,
+						mSampBit) + frameSize - 1)/ frameSize);
+//		mMinBufSize = AudioTrack.getMinBufferSize(mFrequency, mChannel, mSampBit);
+		mMinBufSize =  mDesiredFrames * frameSize;
+		
 		mAudioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, mFrequency,
-				mChannel, mSampBit, mMinBufSize, AudioTrack.MODE_STREAM);
+				mChannel, mSampBit, mDesiredFrames * frameSize, AudioTrack.MODE_STREAM);
 
 		if( mThread != null){
 			mThread.interrupt();
@@ -219,7 +238,7 @@ public class AudioPlayer implements Runnable{
 	// run in play thread
 	private void doFilePlay(){
 		mThreadRunning = true;
-		byte[] buf = new byte[mHeader.m_sBlock * 4];
+		byte[] buf = new byte[mMinBufSize*2];
 		int flag = 1;
 		while(mThreadRunning){
 			if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
@@ -230,6 +249,7 @@ public class AudioPlayer implements Runnable{
 					break;
 				
 				audioWriteByteBuffer(buf, temp);
+				System.out.println("play===>"+flag);
 //				mAudioTrack.write(buf, 0, temp);
 				if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
 					int nPos = mAudioTrack.getPlaybackHeadPosition();
@@ -255,21 +275,25 @@ public class AudioPlayer implements Runnable{
     	if(buffer == null || mAudioTrack == null)
     		return;
     	
-    	validLen = validLen > buffer.length ? buffer.length : validLen; 
-    	for (int i = 0; i < validLen; ) {        	
-            int result = mAudioTrack.write(buffer, i, validLen - i);
-            if (result > 0) {
-                i += result;
-            } else if (result == 0) {
-                try {
-                    Thread.sleep(1);
-                } catch(InterruptedException e) {
-                    // Nom nom
-                }
-            } else {
-                return;
-            }
-        }
+    	try{
+	    	validLen = validLen > buffer.length ? buffer.length : validLen; 
+	    	for (int i = 0; i < validLen; ) {        	
+	            int result = mAudioTrack.write(buffer, i, validLen - i);
+	            if (result > 0) {
+	                i += result;
+	            } else if (result == 0) {
+	                try {
+	                    Thread.sleep(1);
+	                } catch(InterruptedException e) {
+	                    // Nom nom
+	                }
+	            } else {
+	                return;
+	            }
+	        }
+    	}catch(Exception e){
+    		
+    	}
     }
 	private void release() {
 		if (mAudioTrack != null) {
@@ -313,8 +337,11 @@ public class AudioPlayer implements Runnable{
 		return -1;
 	}
 	public void play(){
+		if(mAudioTrack == null)
+			return;
+		
 		int from = mAudioTrack.getPlayState();
-		if( from != AudioTrack.PLAYSTATE_PLAYING){
+		if( mAudioTrack.getState()== AudioTrack.STATE_INITIALIZED && from != AudioTrack.PLAYSTATE_PLAYING){
 			mAudioTrack.play();
 			Log.d(TAG, "play---PlaybackHeadPosition:" + mAudioTrack.getPlaybackHeadPosition());
 			
@@ -324,8 +351,11 @@ public class AudioPlayer implements Runnable{
 	}
 	
 	public void stop(){
+		if(mAudioTrack == null)
+			return;
+		
 		int from = mAudioTrack.getPlayState();
-		if( from != AudioTrack.PLAYSTATE_STOPPED){
+		if( mAudioTrack.getState()== AudioTrack.STATE_INITIALIZED && from != AudioTrack.PLAYSTATE_STOPPED){
 			mAudioTrack.stop();
 			Log.d(TAG, "stop---PlaybackHeadPosition:" + mAudioTrack.getPlaybackHeadPosition());
 			
@@ -337,12 +367,19 @@ public class AudioPlayer implements Runnable{
 			if( mThread != null){
 				mThread.interrupt();
 				mThread = null;
+				try {
+					Thread.sleep(300);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
 	
 	public void pause(){
-		if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
+		if(mAudioTrack == null)
+			return;
+		if( mAudioTrack.getState()== AudioTrack.STATE_INITIALIZED && mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
 			Log.d(TAG,"pause");
 			Log.d(TAG, "PlaybackHeadPosition:" + mAudioTrack.getPlaybackHeadPosition());
 
@@ -351,6 +388,7 @@ public class AudioPlayer implements Runnable{
 			if(mOnPlayStateChangedListener != null)
 				mOnPlayStateChangedListener.onPlayStateChanged(AudioTrack.PLAYSTATE_PLAYING, mAudioTrack.getPlayState());
 		}
+		
 	}
 	
 //	//it seems we call do it only in the  MODE_STATIC mode
@@ -367,17 +405,23 @@ public class AudioPlayer implements Runnable{
 //		this.play();
 //	}
 	public void fastForward(){
+		if(mAudioTrack == null)
+			return;
 		int n = mAudioTrack.getPlaybackHeadPosition();
 		
 		mAudioTrack.setPlaybackHeadPosition(n+5*mMinBufSize);
 	}
 	public void fastBackward(){
+		if(mAudioTrack == null)
+			return;
 		int n = mAudioTrack.getPlaybackHeadPosition();
 		
 		mAudioTrack.setPlaybackHeadPosition(n - 5*mMinBufSize);
 	}
 	
 	public void addAudioVolume(){
+		if(mAudioTrack == null)
+			return;
 		if( mIsAudioVolumeMute){
 			if( AudioTrack.SUCCESS == mAudioTrack.setStereoVolume(mCurAudioVolume, mCurAudioVolume)){
 				mIsAudioVolumeMute = false;
@@ -394,6 +438,8 @@ public class AudioPlayer implements Runnable{
 	}
 	
 	public void subAudioVolume(){
+		if(mAudioTrack == null)
+			return;
 		if( mIsAudioVolumeMute){
 			if( AudioTrack.SUCCESS == mAudioTrack.setStereoVolume(mCurAudioVolume, mCurAudioVolume)){
 				mIsAudioVolumeMute = false;
@@ -409,6 +455,8 @@ public class AudioPlayer implements Runnable{
 	}
 	public void muteAudioVolume(){	
 		Log.d(TAG,"muteVolume");	
+		if(mAudioTrack == null)
+			return;
 		if( AudioTrack.SUCCESS == mAudioTrack.setStereoVolume(0.0f, 0.0f)){
 			Log.d(TAG,"muteVolume success");
 			mIsAudioVolumeMute = true;

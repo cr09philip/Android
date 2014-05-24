@@ -54,7 +54,10 @@ public class FileHeader {
 		this.m_nLength = header.m_nDataLength;
 		
 		this.m_nOffset = 0;		
-		this.m_nDuration = this.m_nLength / (m_bSamples * 1000 *(m_bChannels + 1) * m_bBitsPerSample/8);
+		float sizeByBits = this.m_nLength * 8;
+		
+		float bytesPerSec = (CodeUtil.makeShort((byte) 0, this.m_bBytesPerSec)) * 1024;
+		this.m_nDuration = (int) (sizeByBits/bytesPerSec + 0.5f); //this.m_nLength * 8 / (this.m_bBytesPerSec * 1024); // (m_bSamples * 1000 * (m_bChannels + 1) * m_bBitsPerSample/8);
 	}
 	
 	public byte[] toBinStream(){

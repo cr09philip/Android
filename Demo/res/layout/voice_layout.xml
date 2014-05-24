@@ -13,7 +13,7 @@
         android:layout_alignParentBottom="true"
         android:background="@drawable/download_info_bg"
         android:paddingTop="4dp" >
-
+<!-- 
         <ImageView
             android:id="@+id/download__btn"
             android:layout_width="wrap_content"
@@ -36,7 +36,18 @@
             android:text="@string/download_progress"
             android:textColor="@color/white"
             android:textSize="8pt" />
-
+ -->
+		<TextView
+            android:id="@+id/success_progress_txt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_gravity="center"
+            android:layout_marginLeft="12dp"
+            android:layout_marginRight="5dp"
+            android:text="@string/download_total_nums"
+            android:textColor="@color/white"
+            android:textSize="8pt" />
         <TextView
             android:id="@+id/download_speed_txt"
             android:layout_width="wrap_content"
@@ -50,12 +61,21 @@
             android:textSize="8pt" />
     </RelativeLayout>
 
+    <include 
+        layout="@layout/play_panel_layout"
+        android:id="@+id/playinfo_view"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/download_info_view"/>
+    
     <ListView
         android:id="@+id/music_list"
         android:layout_width="fill_parent"
         android:layout_height="fill_parent"
-        android:layout_above="@id/download_info_view"
+        android:layout_above="@id/playinfo_view"
         android:layout_below="@id/title"
+        android:paddingTop="20dp"
+        android:paddingBottom="20dp"
         android:layout_marginLeft="12dp"
         android:layout_marginRight="12dp"
         android:cacheColorHint="#0000"
@@ -63,13 +83,7 @@
         android:dividerHeight="10dp"
         android:fadingEdge="none"
         android:listSelector="@android:color/transparent"
-        android:scrollbars="none"
-        android:paddingTop="20dp" >
+        android:scrollbars="none" >
     </ListView>
 
-    <include 
-        layout="@layout/play_panel_layout"
-        android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:layout_above="@id/download_info_view"/>
 </RelativeLayout>

@@ -29,6 +29,8 @@ public class SettingActivity extends Activity {
 	private SettingsSp mSettings = null;
 	private View mG722SettingLayout;
 	private String mBitRate48;
+	private Button mBandWidthButton;
+	private Button mBitRateButton;
 	/**
 	 * @return the mSettings
 	 */
@@ -100,21 +102,23 @@ public class SettingActivity extends Activity {
 
 		mG722SettingLayout = findViewById(R.id.g_722_1_setting);
 		
-		mBandWidthAdapter = ArrayAdapter.createFromResource(this, R.array.band_width_value, R.layout.spinner_item_layout);
-		mBandWidthAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mBandWidthAdapter = ArrayAdapter.createFromResource(this, R.array.band_width_value, R.layout.spinner_header_layout);
+		mBandWidthAdapter.setDropDownViewResource(R.layout.spinner_item_layout);
 		mBandWidthSpinner = (Spinner) findViewById(R.id.band_width_value);
 		mBandWidthSpinner.setAdapter(mBandWidthAdapter);
+		mBandWidthButton = (Button)findViewById(R.id.band_width_static_btn);
 		
 		String[] ls = getResources().getStringArray(R.array.bit_rate_value);
 		ArrayList<CharSequence> list = new ArrayList<CharSequence>();
 		for(int i = 0; i < ls.length; i++){
 			list.add(ls[i]);
 		}
-		mBitRateAdapter = new ArrayAdapter<CharSequence>(this, R.layout.spinner_item_layout, list);
+		mBitRateAdapter = new ArrayAdapter<CharSequence>(this, R.layout.spinner_header_layout, list);
 //		mBitRateAdapter = ArrayAdapter.createFromResource(this, R.array.bit_rate_value, R.layout.spinner_item_layout);
-		mBitRateAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+		mBitRateAdapter.setDropDownViewResource(R.layout.spinner_item_layout);
 		mBitRateSpinner = (Spinner) findViewById(R.id.bit_rate_value);
 		mBitRateSpinner.setAdapter(mBitRateAdapter);
+		mBitRateButton = (Button)findViewById(R.id.bit_rate_static_btn);
 	}
 	
 	private void setupEvents() {
@@ -178,6 +182,12 @@ public class SettingActivity extends Activity {
 			}
 		});
 		
+		mBandWidthButton.setOnClickListener(new OnClickListener() {
+			
+			public void onClick(View v) {
+				mBandWidthSpinner.performClick();
+			}
+		});
 		mBitRateSpinner.setOnItemSelectedListener(new OnItemSelectedListener(){
 
 			public void onItemSelected(AdapterView<?> parent, View view,
@@ -194,6 +204,13 @@ public class SettingActivity extends Activity {
 				getSettings().setBit_rate_value((byte) 32);		
 			}
 			
+		});
+		
+		mBitRateButton.setOnClickListener(new OnClickListener() {
+			
+			public void onClick(View v) {
+				mBitRateSpinner.performClick();
+			}
 		});
 	}
 
