@@ -543,7 +543,7 @@ public class VoiceListActivity extends Activity
         	
         	Log.d(TAG, "size: " + item.mTotalBytes + "sec:" + System.nanoTime() + "start:"
         			+ item.mStartNanoSecs);
-        	float fSpeed = item.mTotalBytes*1000/(System.nanoTime() - item.mStartNanoSecs);
+        	float fSpeed = item.mTotalBytes*1000000000/(System.nanoTime() - item.mStartNanoSecs);
         	fSpeed /= (1024*128);
         	RefreshDownInfo(obj.info.m_nDownPercent, fSpeed, obj.info.m_sIndex, obj.total);
         	

@@ -178,7 +178,7 @@ public class KcReceiveMsgThread implements Runnable {
 								}while(toskip > 0);
 								
 								// 讀下一個文件的文件頭
-								dataHeader = SocketDataParser.readDataHeader(inputStream);
+//								dataHeader = SocketDataParser.readDataHeader(inputStream);
 								break;
 							}
 						}
