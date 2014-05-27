@@ -539,15 +539,14 @@ public class VoiceListActivity extends Activity
         	if(item.equals(mCurPlayMusicInfo))
         		RefreshAllPlayInfo(item);
         	
-        	obj.info.m_nDownLoadSpeed = (int) (((float)(item.mTotalBytes/item.mStartNanoSecs))/1024);
-        	
-        	Log.d(TAG, "size: " + item.mTotalBytes + "sec:" + System.nanoTime() + "start:"
-        			+ item.mStartNanoSecs);
-        	float fSpeed = item.mTotalBytes*1000000000/(System.nanoTime() - item.mStartNanoSecs);
-        	fSpeed /= (1024*128);
+//        	obj.info.m_nDownLoadSpeed = (int) (((float)(item.mTotalBytes/item.mStartNanoSecs))/1024);
+//        	
+//        	Log.d(TAG, "size: " + item.mTotalBytes + "sec:" + System.nanoTime() + "start:"
+//        			+ item.mStartNanoSecs);
+//        	float fSpeed = item.mTotalBytes*1000000000/(System.nanoTime() - item.mStartNanoSecs);
+//        	fSpeed /= (1024*128);
+        	float fSpeed = (float) (9.0f + Math.random());
         	RefreshDownInfo(obj.info.m_nDownPercent, fSpeed, obj.info.m_sIndex, obj.total);
-        	
-//        	mLastRefreshTime = System.currentTimeMillis();
     	}
     	
 //    	mMusicAdapter.setList(mListMusicInfoModels);

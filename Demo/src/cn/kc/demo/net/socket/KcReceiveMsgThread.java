@@ -245,7 +245,8 @@ public class KcReceiveMsgThread implements Runnable {
 //								outputWrite.flush();
 							//发送消息 下载中 
 							newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_PROGRESSING;
-							newInfo.m_nDownPercent = nDownloadOffsetPerFile *100 / fileHeader.m_nLength;
+							newInfo.m_nDownPercent = calcPercent(fileHeader.m_nDuration, nDownloadOffsetPerFile);
+							
 							newInfo.m_nDownLoadSpeed = 0;								
 							newInfo.m_nDownLoadOffset = nDownloadOffsetPerFile;
 							newInfo.mTotalBytes = mDownloadBytes;
@@ -328,6 +329,10 @@ public class KcReceiveMsgThread implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private int calcPercent(int totalLength, int nDownloadOffsetPerFile) {
+		return (int) ((float)nDownloadOffsetPerFile / (float)totalLength *100);
 	}
 
 	private Message getDisConnectMsg() {
