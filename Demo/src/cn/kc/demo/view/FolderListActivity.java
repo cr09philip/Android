@@ -2,6 +2,9 @@ package cn.kc.demo.view;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -22,6 +25,7 @@ import cn.kc.demo.CrashHandler;
 import cn.kc.demo.R;
 import cn.kc.demo.adapter.FolderAdapter;
 import cn.kc.demo.model.FolderModel;
+import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.Utils;
 
@@ -94,6 +98,20 @@ public class FolderListActivity extends Activity {
         if(files == null)  
             return;
         
+        Arrays.sort(files, new Comparator<File>() {
+
+			public int compare(File lhs, File rhs) {
+				long diff = lhs.lastModified() - rhs.lastModified();
+				
+				if(diff<0)
+					return 1;
+				else if(diff==0)
+		  		  	return 0;
+				else
+					return -1;
+			}
+		});
+        
 	    for (int i = 0; i < files.length; i++) {
 	        File f = files[i];
 	        if (f.isFile() )
@@ -148,7 +166,7 @@ public class FolderListActivity extends Activity {
 						FolderModel model = new FolderModel(name);
 						if( !FileUtil.IsFileExist(path) ){
 							FileUtil.CreatSDDir( path );
-							mListFolder.add(model);
+							mListFolder.add(0,model);
 							
 							if(mFolderListAdapter != null)
 								mFolderListAdapter.notifyDataSetChanged();

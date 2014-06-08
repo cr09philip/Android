@@ -19,6 +19,9 @@
     <string name="alert_dialog_cancel">取消</string>    
     <string name="alert_dialog_text_entry">是否创建新文件夹</string>
     <string name="alert_dialog_recover_title">存在重名文件%1$s,是否覆盖？</string>
+    <string name="alert_dialog_delete_send_files">文件传输完毕，是否删除发端全部文件？</string>
+    <string name="alert_dialog_sure_delete_send_files">是否确认删除发端全部文件？</string>
+    
     <string name="play">正在播放</string>
     <string name="pause">暂停</string>
     <string name="stop">停止</string>

@@ -57,11 +57,11 @@ public class SocketDataParser {
 		return new NetHeaderModel(buffer, 0);
 	}
 	
-	public static DataHeaderModel readDataHeader(InputStream in) throws IOException{
+	public static DataHeaderModel readDataHeader(InputStream in, int index) throws IOException{
 		byte[] buffer = new byte[DataHeaderModel.DATA_HEADER_FIXED_SIZE];
 		if( DataHeaderModel.DATA_HEADER_FIXED_SIZE != in.read(buffer, 0, DataHeaderModel.DATA_HEADER_FIXED_SIZE))
 			return null;
 		
-		return new DataHeaderModel(buffer, 0);
+		return new DataHeaderModel(buffer, 0, index);
 	}
 }

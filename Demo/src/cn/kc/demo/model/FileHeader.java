@@ -1,49 +1,50 @@
 package cn.kc.demo.model;
 
+import java.util.Arrays;
+
 import cn.kc.demo.utils.CodeUtil;
 
 public class FileHeader {
-	public static final int FILE_HEADER_SIZE = 19;
-	public static final int File_HEADER_OFFSET_POSTION = 11;
-	//int magicNum;
-	public byte m_bFormatTag;//0	FormatTag	1	编码格式类型	00—	IMA-ADPCM；01- g.722.1
+	public static final int FILE_HEADER_SIZE = 24;
+	public static final int File_HEADER_OFFSET_POSTION = 16;
+	public final int m_nMagicNum = 0xfafafafa;//0
+	public byte m_bFileIndex;//4
+	public byte m_bFormatTag;//5	FormatTag	1	编码格式类型	00—	IMA-ADPCM；01- g.722.1
 							//其他以待扩展
-	public byte m_bChannels;//1	nChannels	1	编码通道数目	00—单声道；
+	public byte m_bChannels;//6	nChannels	1	编码通道数目	00—单声道；
 							//01—双声道；
-	public byte m_bBytesPerSec;//2	BytesPerSec	1	编码后的压缩速率
+	public byte m_bBytesPerSec;//7	BytesPerSec	1	编码后的压缩速率
 								//（每秒多少字节数）	以Kbits/s为单位
 								//（eg：64Kbps—64）
-	public byte m_bSamples; //3	Samples	1	采样率	以KHz为单位（eg：16KHz—16）
-	public byte m_bBitsPerSample;//4	BitsPerSample	1	量化单位（每样本数据位数）	以bit为单位（eg：16—16）
-	//byte m_resver;
-	public short m_sBlock;//5	Block	2	每次处理的数据块的大小	以字节为单位，是指adpcm压缩后的（这里定义为：500）
-	public int m_nLength;//7	LENGTH	4	数据长度	仅指DATA部分的数据长度，单位是字节
-	public int m_nOffset;//11   LENGTH  4   已经接收到的数据长度
-	public int m_nDuration; //15        4 
+	public byte m_bSamples; //8	Samples	1	采样率	以KHz为单位（eg：16KHz—16）
+	public byte m_bBitsPerSample;//9	BitsPerSample	1	量化单位（每样本数据位数）	以bit为单位（eg：16—16）
+	public short m_sBlock;//10	Block	2	每次处理的数据块的大小	以字节为单位，是指adpcm压缩后的（这里定义为：500）
+	public int m_nLength;//12	LENGTH	4	数据长度	仅指DATA部分的数据长度，单位是字节
+	public int m_nOffset;//16   LENGTH  4   已经接收到的数据长度
+	public int m_nDuration; //20        4 
 	
-	public FileHeader(byte[] header, int start){
-		int index = start;
-		this.m_bFormatTag = header[index++];
-		this.m_bChannels = header[index++];
-		this.m_bBytesPerSec = header[index++];
-		this.m_bSamples = header[index++];
-		this.m_bBitsPerSample = header[index++];
+	public FileHeader(byte[] header){
+//		int index = start;
+//		index += 4;//skip magic num
+		this.m_bFileIndex = header[4];
+		this.m_bFormatTag = header[5];
+		this.m_bChannels = header[6];
+		this.m_bBytesPerSec = header[7];
+		this.m_bSamples = header[8];
+		this.m_bBitsPerSample = header[9];
 		
 		
-		this.m_sBlock = CodeUtil.makeShort(header,index);
-		index += 2;
+		this.m_sBlock = CodeUtil.makeShort(header,10);
 		
-		this.m_nLength = CodeUtil.makeInt(header,index);
-		index += 4;
+		this.m_nLength = CodeUtil.makeInt(header,12);
 		
-		this.m_nOffset = CodeUtil.makeInt(header,index);
-		index += 4;
+		this.m_nOffset = CodeUtil.makeInt(header,16);
 		
-		this.m_nDuration = CodeUtil.makeInt(header,index);
-		index += 4;
+		this.m_nDuration = CodeUtil.makeInt(header,20);
 	}
 	
 	public FileHeader(DataHeaderModel header){
+		this.m_bFileIndex = header.m_bFileIndex;
 		this.m_bFormatTag = header.m_bFormatTag;
 		this.m_bChannels = header.m_bChannels;
 		this.m_bBytesPerSec = header.m_bBytesPerSec;
@@ -62,32 +63,37 @@ public class FileHeader {
 	
 	public byte[] toBinStream(){
 		byte[] resBuf = new byte[FILE_HEADER_SIZE];
-		int nIndex = 0;
+		
+		byte[] magicBuf = CodeUtil.int2bytes(this.m_nMagicNum, true);
+		for(int i = 0; i < magicBuf.length;i++){
+			resBuf[i] = magicBuf[i];
+		}
 
-		resBuf[nIndex++] = this.m_bFormatTag;
-		resBuf[nIndex++] = this.m_bChannels;
-		resBuf[nIndex++] = this.m_bBytesPerSec;
-		resBuf[nIndex++] = this.m_bSamples;
-		resBuf[nIndex++] = this.m_bBitsPerSample;
+		resBuf[4] = this.m_bFileIndex;
+		resBuf[5] = this.m_bFormatTag;
+		resBuf[6] = this.m_bChannels;
+		resBuf[7] = this.m_bBytesPerSec;
+		resBuf[8] = this.m_bSamples;
+		resBuf[9] = this.m_bBitsPerSample;
 
 		byte[] shortBuf = CodeUtil.short2bytes(this.m_sBlock, true);
 		for(int i = 0; i < shortBuf.length;i++){
-			resBuf[nIndex++] = shortBuf[i];
+			resBuf[10+i] = shortBuf[i];
 		}
 		
 		byte[] intBuf = CodeUtil.int2bytes(this.m_nLength, true);
 		for(int i = 0; i < intBuf.length;i++){
-			resBuf[nIndex++] = intBuf[i];
+			resBuf[12+i] = intBuf[i];
 		}
 		
 		byte[] intBuf1 = CodeUtil.int2bytes(this.m_nOffset, true);
 		for(int i = 0; i < intBuf1.length;i++){
-			resBuf[nIndex++] = intBuf1[i];
+			resBuf[16+i] = intBuf1[i];
 		}
 		
 		byte[] intBuf2 = CodeUtil.int2bytes(this.m_nDuration, true);
 		for(int i = 0; i < intBuf2.length;i++){
-			resBuf[nIndex++] = intBuf2[i];
+			resBuf[20+i] = intBuf2[i];
 		}
 		
 		return resBuf;

@@ -119,7 +119,7 @@ public class AudioPlayer implements Runnable{
 			mInput = new FileInputStream( new File(path) );
 			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
 			mInput.read(header, 0, FileHeader.FILE_HEADER_SIZE);
-			mHeader = new FileHeader(header, 0);
+			mHeader = new FileHeader(header);
 			
 			switch (mHeader.m_bFormatTag) {
 			case 0://ADPCM

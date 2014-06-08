@@ -9,6 +9,7 @@ public class DataHeaderModel /*extends NetHeaderModel*/ {
 	public static final int FILE_NAME_LENGTH = 35;
 	public static final int DATA_HEADER_FIXED_SIZE = 48;
 	
+	public byte m_bFileIndex;
 	public short m_sFileNum;//10	FILENUM	2	文件总数量	
 	public byte m_bFormatTag;//12	FormatTag	1	编码格式类型	00—	IMA-ADPCM；01- g.722.1
 							//其他以待扩展
@@ -23,10 +24,11 @@ public class DataHeaderModel /*extends NetHeaderModel*/ {
 	public String m_strFileName;//19	FILENAME	35	文件名称	文件名称信息：文件序号+文件录音时间+文件录音时长 信息
 								//（eg：A000001_20101218_101010_003000.vox）
 	public int m_nDataLength;//54	LENGTH	4	数据长度	仅指DATA部分的数据长度，单位是字节
-		
+	
 						//	58	DATA	不定	信息数据
 	
-	public DataHeaderModel(byte[] header, int start){
+	public DataHeaderModel(byte[] header, int start, int fileIndex){
+		this.m_bFileIndex = (byte) fileIndex;
 		int index = start;
 		this.m_sFileNum = CodeUtil.makeShort(header,index);
 		index += 2;

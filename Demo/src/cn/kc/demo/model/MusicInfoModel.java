@@ -73,31 +73,31 @@ public class MusicInfoModel {
 		mStartNanoSecs = 0;
 	}
 	
-	public static int getMusicFileDuration(String fullPath){
-		int nRes = 0;
-		FileInputStream input = null;
-		try {
-			input = new FileInputStream( fullPath);
-			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
-			input.read(header, 0, FileHeader.FILE_HEADER_SIZE);
-
-			FileHeader mHeader = new FileHeader(header, 0);
-			nRes = mHeader.m_nDuration;
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch(IOException e){
-			e.printStackTrace();
-		} finally{
-			try {
-				input.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-		
-		return nRes;
-	}
-	public static MusicInfoModel GetMusicInfoModelFromFile(File file, int index){
+//	public static int getMusicFileDuration(String fullPath){
+//		int nRes = 0;
+//		FileInputStream input = null;
+//		try {
+//			input = new FileInputStream( fullPath);
+//			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
+//			input.read(header, 0, FileHeader.FILE_HEADER_SIZE);
+//
+//			FileHeader mHeader = new FileHeader(header);
+//			nRes = mHeader.m_nDuration;
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//		} catch(IOException e){
+//			e.printStackTrace();
+//		} finally{
+//			try {
+//				input.close();
+//			} catch (IOException e) {
+//				e.printStackTrace();
+//			}
+//		}
+//		
+//		return nRes;
+//	}
+	public static MusicInfoModel GetMusicInfoModelFromFile(File file){
 		MusicInfoModel newInfo = null;
 		FileInputStream mInput = null;
 		try {
@@ -106,11 +106,11 @@ public class MusicInfoModel {
 			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
 			mInput.read(header, 0, FileHeader.FILE_HEADER_SIZE);
 
-			FileHeader fileHeader = new FileHeader(header, 0);
+			FileHeader fileHeader = new FileHeader(header);
 			
 			newInfo.m_strName = file.getName();
 			
-			newInfo.m_sIndex = (short) index;
+			newInfo.m_sIndex = (short) fileHeader.m_bFileIndex;
 			newInfo.m_nDownLoadOffset = fileHeader.m_nOffset;
 			newInfo.m_nDuration = fileHeader.m_nDuration;
 			newInfo.m_nDownLoadSpeed = 0;

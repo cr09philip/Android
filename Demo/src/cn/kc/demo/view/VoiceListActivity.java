@@ -1,7 +1,6 @@
 package cn.kc.demo.view;
 
 import java.io.File;
-import java.net.Socket;
 import java.util.ArrayList;
 
 import android.app.Activity;
@@ -11,9 +10,6 @@ import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -36,8 +32,6 @@ import cn.kc.demo.audio.AudioPlayer;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcReceiveMsgThread.ReceiveInfo;
 import cn.kc.demo.net.socket.KcSocketServer;
-import cn.kc.demo.net.socket.KcSocketServer.ClientInfo;
-import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.VolumeControl;
 
 public class VoiceListActivity extends Activity 
@@ -280,7 +274,7 @@ public class VoiceListActivity extends Activity
 		                continue;
 	        	}
 	        	
-	        	MusicInfoModel newInfo = MusicInfoModel.GetMusicInfoModelFromFile(f, mListMusicInfoModels.size());
+	        	MusicInfoModel newInfo = MusicInfoModel.GetMusicInfoModelFromFile(f);
 	        	newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_LOCAL;
 	        	mListMusicInfoModels.add(newInfo);
 	        }
@@ -421,7 +415,9 @@ public class VoiceListActivity extends Activity
 			MusicInfoModel thisInfo = mListMusicInfoModels.get(position);
 			
 			if( mCurPlayMusicInfo.m_strName.equals(thisInfo.m_strName)){
-				return;
+				if( mPlayer.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
+					return;
+				}
 			}else{
 				if( mPlayer.getPlayState() != AudioTrack.PLAYSTATE_STOPPED){
 					mPlayer.stop();
@@ -534,18 +530,18 @@ public class VoiceListActivity extends Activity
     	item.m_nDownLoadSpeed = obj.info.m_nDownLoadSpeed;
 
     	long mill = System.currentTimeMillis() - mLastRefreshTime;
-    	if(mill > 3000){
+    	if(mill > 1000){
         	mMusicAdapter.notifyDataSetChanged();
         	if(item.equals(mCurPlayMusicInfo))
         		RefreshAllPlayInfo(item);
         	
-//        	obj.info.m_nDownLoadSpeed = (int) (((float)(item.mTotalBytes/item.mStartNanoSecs))/1024);
-//        	
-//        	Log.d(TAG, "size: " + item.mTotalBytes + "sec:" + System.nanoTime() + "start:"
-//        			+ item.mStartNanoSecs);
-//        	float fSpeed = item.mTotalBytes*1000000000/(System.nanoTime() - item.mStartNanoSecs);
-//        	fSpeed /= (1024*128);
-        	float fSpeed = (float) (9.0f + Math.random());
+        	obj.info.m_nDownLoadSpeed = (int) (((float)(item.mTotalBytes/item.mStartNanoSecs))/1024);
+        	
+        	Log.d(TAG, "size: " + item.mTotalBytes + "sec:" + System.nanoTime() + "start:"
+        			+ item.mStartNanoSecs);
+        	float fSpeed = item.mTotalBytes*1000000000/(System.nanoTime() - item.mStartNanoSecs);
+        	fSpeed /= (1024*128);
+//        	float fSpeed = (float) (9.0f + Math.random());
         	RefreshDownInfo(obj.info.m_nDownPercent, fSpeed, obj.info.m_sIndex, obj.total);
     	}
     	

@@ -144,6 +144,8 @@ public class KcSocketServer implements Runnable {
 
 		public final static int SOCKET_CONNECT = 8;
 		public final static int SOCKET_DISCONNECT = 9;
+		
+		public final static int SOCKET_IS_NEED_DELETE_SEND_FILES = 10;
 
         public DownloadInfoHandler() {
         }
@@ -201,41 +203,89 @@ public class KcSocketServer implements Runnable {
             	getClientInfoBySocket((Socket) msg.obj).isConnecting = false;
             	break;
             case SOCKET_RENAME_FILE:
-            	final Pair<KcReceiveMsgThread, String> info = (Pair<KcReceiveMsgThread, String>) msg.obj;
-            	String title = String.format(mContext.getResources().getString(R.string.alert_dialog_recover_title), info.second);
-            	new AlertDialog.Builder(mContext)
-                .setIconAttribute(android.R.attr.alertDialogIcon)
-                .setTitle(title)
-                .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        /* User clicked OK so do some stuff */
-                    	//delete file 
-                    	File f = new File(info.first.getAppPath() + "/" + info.second);
-                    	f.delete();
-                    	
-                    	//delete item in the list
-                    	MusicInfoModel music = mContext.getMusicInfoModelByName(info.second);
-                    	mContext.mListMusicInfoModels.remove(music);
-                    	
-                    	//refresh the listview
-                    	mContext.refresh();
-                    	
-                    	//set value to reload this
-                    	info.first.mIsNeedRename = new Pair<String, Boolean>(info.second, false);
-                    	
-                    	info.first.mIsPause = false;
-                    }
-                })
-                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int whichButton) {
-                        /* User clicked Cancel so do some stuff */
-                    	//set value to ignor this
-                    	info.first.mIsNeedRename = new Pair<String, Boolean>(info.second, true);
-                    	
-                    	info.first.mIsPause = false;
-                    }
-                })
-                .create().show();
+	            {
+	            	final Pair<KcReceiveMsgThread, String> info = (Pair<KcReceiveMsgThread, String>) msg.obj;
+	            	String title = String.format(mContext.getResources().getString(R.string.alert_dialog_recover_title), info.second);
+	            	new AlertDialog.Builder(mContext)
+	                .setIconAttribute(android.R.attr.alertDialogIcon)
+	                .setTitle(title)
+	                .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
+	                    public void onClick(DialogInterface dialog, int whichButton) {
+	                        /* User clicked OK so do some stuff */
+	                    	//delete file 
+	                    	File f = new File(info.first.getAppPath() + "/" + info.second);
+	                    	f.delete();
+	                    	
+	                    	//delete item in the list
+	                    	MusicInfoModel music = mContext.getMusicInfoModelByName(info.second);
+	                    	mContext.mListMusicInfoModels.remove(music);
+	                    	
+	                    	//refresh the listview
+	                    	mContext.refresh();
+	                    	
+	                    	//set value to reload this
+	                    	info.first.mIsNeedRename = new Pair<String, Boolean>(info.second, false);
+	                    	
+	                    	info.first.mIsPause = false;
+	                    }
+	                })
+	                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
+	                    public void onClick(DialogInterface dialog, int whichButton) {
+	                        /* User clicked Cancel so do some stuff */
+	                    	//set value to ignor this
+	                    	info.first.mIsNeedRename = new Pair<String, Boolean>(info.second, true);
+	                    	
+	                    	info.first.mIsPause = false;
+	                    }
+	                })
+	                .create().show();
+	            }
+            	break;
+            case SOCKET_IS_NEED_DELETE_SEND_FILES:
+	            {
+	            	final KcReceiveMsgThread threadObj = (KcReceiveMsgThread) msg.obj;
+	            	String title = mContext.getResources().getString(R.string.alert_dialog_delete_send_files);
+	            	new AlertDialog.Builder(mContext)
+	                .setIconAttribute(android.R.attr.alertDialogIcon)
+	                .setTitle(title)
+	                .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
+	                    public void onClick(DialogInterface dialog, int whichButton) {
+	                        /* User clicked OK so do some stuff */
+	                    	String title = mContext.getResources().getString(R.string.alert_dialog_sure_delete_send_files);
+	    	            	new AlertDialog.Builder(mContext)
+	    	                .setIconAttribute(android.R.attr.alertDialogIcon)
+	    	                .setTitle(title)
+	    	                .setPositiveButton(R.string.alert_dialog_ok, new DialogInterface.OnClickListener() {
+	    	                    public void onClick(DialogInterface dialog, int whichButton) {
+	    	                        /* User clicked OK so do some stuff */
+	    	                    	//delete file 
+	    	                    	threadObj.mIsDeleteSendFile = true;
+	    	                    	
+	    	                    	threadObj.mIsPause = false;
+	    	                    }
+	    	                })
+	    	                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
+	    	                    public void onClick(DialogInterface dialog, int whichButton) {
+	    	                        /* User clicked Cancel so do some stuff */
+	    	                    	threadObj.mIsDeleteSendFile = false;
+	    	                    	
+	    	                    	threadObj.mIsPause = false;
+	    	                    }
+	    	                })
+	    	                .create().show();
+	                    }
+	                })
+	                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
+	                    public void onClick(DialogInterface dialog, int whichButton) {
+	                        /* User clicked Cancel so do some stuff */
+	                    	threadObj.mIsDeleteSendFile = false;
+	                    	
+	                    	threadObj.mIsPause = false;
+	                    }
+	                })
+	                .create().show();
+	            }
+            	break;
             }
         }
 	}

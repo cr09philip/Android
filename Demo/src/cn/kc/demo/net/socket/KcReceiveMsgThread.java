@@ -8,6 +8,8 @@ import java.io.RandomAccessFile;
 import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 
 import android.app.AlertDialog;
@@ -51,6 +53,7 @@ public class KcReceiveMsgThread implements Runnable {
 	private Message mDestroyMsg;
 	public boolean mIsPause = false;
 	public Pair<String, Boolean> mIsNeedRename = new Pair<String, Boolean>(null, false);
+	public boolean mIsDeleteSendFile = false;
 	public KcReceiveMsgThread(Context context, KcSocketServer server, Socket socket, String path) {
 		mContext = (VoiceListActivity) context;
 		mServer = server;
@@ -104,56 +107,56 @@ public class KcReceiveMsgThread implements Runnable {
 				}
 				
 				mBytesToDownload = header.mLength;
-				mDownloadBytes += NetHeaderModel.NET_HEADER_FIXED_SIZE;
+				mDownloadBytes = NetHeaderModel.NET_HEADER_FIXED_SIZE;
 				mStartMillis = System.nanoTime();//System.currentTimeMillis();//SystemClock.uptimeMillis();
+				short sFileIndex = 0;
 				
 				// 做相应的处理
 				switch (header.mFunction) {
 				case NetHeaderModel.FUNCTION_RECEIVE_LINK:
 					// 返回系統信息 FUNCTION_SEND_TIME_INFO
 					mServer.mHandler.sendMessage(getConnectMsg());	
-					
-					SendTimeInfoModel timeModel = null;
-					if( mContext.getSettingsDetails().getCode_type() == 1){//g722.1
-						timeModel =
-								new SendTimeInfoModel(	mContext.getSettingsDetails().getChannel_type(),
-														mContext.getSettingsDetails().getBand_width_value(),
-														mContext.getSettingsDetails().getBit_rate_value() );
-					}else{
-						timeModel = new SendTimeInfoModel(mContext.getSettingsDetails().getChannel_type());
+										
+					if( !checkIfNeedContinue(outputStream)){
+						SendTimeInfoModel timeModel = null;
+						if( mContext.getSettingsDetails().getCode_type() == 1){//g722.1
+							timeModel =
+									new SendTimeInfoModel(	mContext.getSettingsDetails().getChannel_type(),
+															mContext.getSettingsDetails().getBand_width_value(),
+															mContext.getSettingsDetails().getBit_rate_value() );
+						}else{
+							timeModel = new SendTimeInfoModel(mContext.getSettingsDetails().getChannel_type());
+						}
+						
+						outputStream.write(timeModel.toBinStream());
+						outputStream.flush();
 					}
-					
-					outputStream.write(timeModel.toBinStream());
-					outputStream.flush();
 					
 					mServer.mHandler.sendMessageDelayed(getDisConnectMsg(), 1000);	
-					
-					//是否在这里准备断点续传
-					for(MusicInfoModel info : mContext.mListMusicInfoModels){
-						if(info.m_isNeedContuinue){
-							SendReSendFileModel model = new SendReSendFileModel(info.m_sIndex, info.m_nDownLoadOffset);
-							
-							outputStream.write(model.toBinStream());
-							outputStream.flush();
-						}
-					}
 					break;
 				case NetHeaderModel.FUNCTION_RECEIVE_START:
 					mServer.mHandler.sendMessage(getConnectMsg());
 					
 					// 接收并存儲到本地
-					DataHeaderModel dataHeader = SocketDataParser.readDataHeader(inputStream);
+					DataHeaderModel dataHeader = SocketDataParser.readDataHeader(inputStream, sFileIndex);
 					ReceiveInfo info = new ReceiveInfo();
+
+					int nDownloadOffsetPerFile = 0;
 					if (dataHeader != null) {
-						short sFileIndex = 0;
 						mDownloadBytes += DataHeaderModel.DATA_HEADER_FIXED_SIZE;
 						String oldname = mAppPath + "/"+ dataHeader.m_strFileName;
 						if(FileUtil.IsFileExist(oldname)){
-							mIsPause = true;
-							Message msg = new Message();
-							msg.what = KcSocketServer.DownloadInfoHandler.SOCKET_RENAME_FILE;
-							msg.obj = new Pair<KcReceiveMsgThread, String>(KcReceiveMsgThread.this, dataHeader.m_strFileName);
-							mServer.mHandler.sendMessage(msg);	
+							MusicInfoModel music = mContext.getMusicInfoModelByName(dataHeader.m_strFileName);
+							if(music != null){
+								nDownloadOffsetPerFile = music.m_nDownLoadOffset;
+								if( !music.m_isNeedContuinue){
+									mIsPause = true;
+									Message msg = new Message();
+									msg.what = KcSocketServer.DownloadInfoHandler.SOCKET_RENAME_FILE;
+									msg.obj = new Pair<KcReceiveMsgThread, String>(KcReceiveMsgThread.this, dataHeader.m_strFileName);
+									mServer.mHandler.sendMessage(msg);	
+								}
+							}
 						}
 						while (mIsPause) {
 							try {
@@ -189,10 +192,8 @@ public class KcReceiveMsgThread implements Runnable {
 						FileHeader fileHeader = new FileHeader(dataHeader);
 						
 						//发送消息 新下载任务
-						MusicInfoModel newInfo = new MusicInfoModel(
-								sFileIndex,
-								dataHeader.m_strFileName,
-								fileHeader.m_nDuration);
+						MusicInfoModel newInfo = getMusicModel(sFileIndex, dataHeader.m_strFileName, fileHeader.m_nDuration);
+						
 						newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_BEGIN;
 						newInfo.m_nDownPercent = 0;
 						newInfo.m_nDownLoadSpeed = 0;
@@ -217,7 +218,7 @@ public class KcReceiveMsgThread implements Runnable {
 
 						// 将InputStream当中的数据取出，并写入到文件
 						// 以包中的數據長度為依據
-						int nDownloadOffsetPerFile = 0;
+						
 						while (nRemain > 0) {
 //								int temp = inputStream.read(buffer);
 							int size2read = nRemain > 4*1024 ? 4*1024 : nRemain;
@@ -245,7 +246,7 @@ public class KcReceiveMsgThread implements Runnable {
 //								outputWrite.flush();
 							//发送消息 下载中 
 							newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_PROGRESSING;
-							newInfo.m_nDownPercent = calcPercent(fileHeader.m_nDuration, nDownloadOffsetPerFile);
+							newInfo.m_nDownPercent = calcPercent(fileHeader.m_nLength, nDownloadOffsetPerFile);
 							
 							newInfo.m_nDownLoadSpeed = 0;								
 							newInfo.m_nDownLoadOffset = nDownloadOffsetPerFile;
@@ -302,13 +303,36 @@ public class KcReceiveMsgThread implements Runnable {
 					// 判斷是否接收完整，并返回接收成功或失敗信息
 					if (mListError.isEmpty()) {
 						// FUNCTION_FILE_OK
-						outputStream.write(new SendReceiveOkModel().toBinStream());
+						if(true){//IS NEED DELETE
+							mIsPause = true;
+							Message msg = new Message();
+							msg.what = KcSocketServer.DownloadInfoHandler.SOCKET_IS_NEED_DELETE_SEND_FILES;
+							msg.obj = KcReceiveMsgThread.this;
+							mServer.mHandler.sendMessage(msg);	
+						}
+						while (mIsPause) {
+							try {
+								Thread.sleep(500);
+							} catch (InterruptedException e) {
+								Thread.sleep(500);
+								e.printStackTrace();
+							}
+						}
+						if ( mIsDeleteSendFile ) {
+							outputStream.write(new SendReceiveOkModel(true).toBinStream());
+						}else{
+							outputStream.write(new SendReceiveOkModel(false).toBinStream());
+						}
+						
+						mIsDeleteSendFile = false;
 					} else {
 						// FUNCTION_FILE_ERROR
 						outputStream.write(new SendReceiveErrorModel(mListError).toBinStream());
 						
 						mListError.clear();
 					}
+					
+					sFileIndex = 0;
 
 					mServer.mHandler.sendMessage(getDisConnectMsg());
 
@@ -329,6 +353,71 @@ public class KcReceiveMsgThread implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private boolean checkIfNeedContinue(OutputStream outputStream) {
+		//是否在这里准备断点续传
+		ArrayList<Pair<Integer,Integer>> array = new ArrayList<Pair<Integer,Integer>>();
+		for(MusicInfoModel info : mContext.mListMusicInfoModels){
+			if(info.m_isNeedContuinue){
+				array.add(new Pair<Integer, Integer>((int) info.m_sIndex, info.m_nDownLoadOffset));
+			}
+		}
+		
+		if(array.size() != 0){
+			Collections.sort(array, new Comparator<Pair<Integer, Integer>>() {
+
+				public int compare(Pair<Integer, Integer> lhs,
+						Pair<Integer, Integer> rhs) {
+					if(lhs.first > rhs.first)
+						return 1;
+					return 0;
+				}
+			});
+
+			Pair<Integer, Integer> begin = array.get(0);
+			if(array.size() > 3){				
+				if((mContext.mListMusicInfoModels.size() -1 - begin.first)/2 > array.size() -1){
+					
+					for(Pair<Integer, Integer> item : array){
+						SendReSendFileModel model = new SendReSendFileModel((byte)1, item.first.shortValue(), item.second);
+						
+						try {
+							outputStream.write(model.toBinStream());
+							outputStream.flush();
+						} catch (IOException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+					
+					return true;
+				}
+			}
+
+			//send resend 0 ,resend all after first
+			SendReSendFileModel model = new SendReSendFileModel((byte)0, begin.first.shortValue(), begin.second);
+			
+			try {
+				outputStream.write(model.toBinStream());
+				outputStream.flush();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			return true;
+		}
+		
+		return false;
+	}
+
+	private MusicInfoModel getMusicModel(short sFileIndex, String fileName, int duration) {
+		MusicInfoModel ret = mContext.getMusicInfoModelByName(fileName);
+		if(ret == null)
+			ret = new MusicInfoModel(sFileIndex, fileName, duration);
+		
+		return ret;
 	}
 
 	private int calcPercent(int totalLength, int nDownloadOffsetPerFile) {
