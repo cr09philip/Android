@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 
+import com.androidsoft.decoder.AdpcmDecoder;
+
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
@@ -13,17 +15,16 @@ import android.util.Log;
 
 public class AdpcmPlayer {
 	private final String TAG = "AdpcmPlayer";
-	//音频参数
+	//闊抽鍙傛暟
 	private int mSampleRate = 0;
 	private boolean mIsStereo = false;
 	private boolean mIs16Bit = false;
 	private int mBlockSize = 0;
 	
-	//音频文件
+	//闊抽鏂囦欢
 	private String mAudioFile = null;
 	
-	//adpcm解码器
-	private AdpcmDecoder mAdpcmDecoder = null;
+	//adpcm瑙ｇ爜鍣�	private AdpcmDecoder mAdpcmDecoder = null;
 		
 	private AudioTrack mAudioTrack = null;  
 	private Thread mAudioThread = null;
@@ -34,6 +35,7 @@ public class AdpcmPlayer {
 	private Object mOutBuf = null;
 	
 	private int mDecodeIndex = 1;
+	protected AdpcmDecoder mAdpcmDecoder;
 	
 	public AdpcmPlayer(String audioFile){
 		mSampleRate = 16000;
@@ -109,13 +111,6 @@ public class AdpcmPlayer {
 				: AudioFormat.ENCODING_PCM_8BIT;
 		int frameSize = (mIsStereo ? 2 : 1) * (mIs16Bit ? 2 : 1);
 
-		//if (is16Bit) {
-		//	mbuf = new short[desiredFrames * (isStereo ? 2 : 1)];
-		//} else {
-		//	mbuf = new byte[desiredFrames * (isStereo ? 2 : 1)];
-		//}
-		
-		
 		int desiredFrames = Math.max(mBlockSize,
 				(AudioTrack.getMinBufferSize(mSampleRate, channelConfig,
 				audioFormat) + frameSize - 1)/ frameSize);
@@ -131,8 +126,6 @@ public class AdpcmPlayer {
 
         mAudioThread.setPriority(Thread.MAX_PRIORITY);
         mAudioThread.start();
-        
-		//return mbuf;
 	}
 	
 	/*

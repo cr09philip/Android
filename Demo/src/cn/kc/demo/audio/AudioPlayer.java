@@ -5,18 +5,20 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import com.example.hellojni.AdpcmDecoder;
-import com.example.hellojni.G7221Decoder;
-
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
+import android.media.AudioTimestamp;
 import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
+import cn.kc.demo.SettingsSp;
 import cn.kc.demo.model.FileHeader;
+
+import com.androidsoft.decoder.AdpcmDecoder;
+import com.androidsoft.decoder.G7221Decoder;
 /**
  * @author cr09philip
  * 
@@ -56,11 +58,20 @@ public class AudioPlayer implements Runnable{
 
 	private int mDesiredFrames;
 
+	private int mn16bitWordsPerFrame;
+	private final int MAX_BITS_PER_FRAME = 960;
+	private final int MAX_DCT_LENGTH = 640;
+
+	private final int INPUT_BUFFSIZE = MAX_BITS_PER_FRAME / 16;
+	private final int OUTPUT_BUFFSIZE = MAX_DCT_LENGTH;
+
+	private Context mContext;
 	public AudioPlayer(Context context){		
 		mMaxAudioVolume = AudioTrack.getMaxVolume();
 		mMinAudioVolume = AudioTrack.getMinVolume();
 		
 		mHandler = new PlayerInfoHandler();
+		mContext = context;
 	}
 	private class PlayerInfoHandler extends Handler{
 		public static final int PLAY_OVER_FLAG = -1;
@@ -126,7 +137,10 @@ public class AudioPlayer implements Runnable{
 				
 				mG7221Decoder = new G7221Decoder();
 				
-				mG7221Decoder.init(mHeader.getSampleRate(), mHeader.getBlockSize());
+				mn16bitWordsPerFrame = mG7221Decoder.init(
+						(int)SettingsSp.Instance().init(mContext).getBit_rate_value() * 1000,
+						(int)SettingsSp.Instance().init(mContext).getBand_width_value() * 1000);
+				
 				break;
 			default:
 				break;
@@ -152,16 +166,16 @@ public class AudioPlayer implements Runnable{
 	protected int getBufferToPlay(byte[] buf, int flag){
 		int nRes = 0;
 		try {
-			byte[] tmpBuf = new byte[mHeader.m_sBlock];
-			int len = mInput.read(tmpBuf, 0, mHeader.m_sBlock);
-
-			System.out.println("===>"+flag +"===>"+len);
-			if(len == -1)
-				return -1;
 			//解码
 			switch (mHeader.m_bFormatTag) {
 			case 0://ADPCM
 				if(mAdpcmDecoder != null){
+					byte[] tmpBuf = new byte[mHeader.m_sBlock];
+					int len = mInput.read(tmpBuf, 0, mHeader.m_sBlock);
+
+					if(len == -1)
+						return -1;
+					
 					if(mHeader.isStereo()){
 						nRes = mAdpcmDecoder.decodeStereo(tmpBuf, len, buf, flag);
 					}
@@ -172,14 +186,32 @@ public class AudioPlayer implements Runnable{
 				break;
 			case 1://G.722.1
 				if( mG7221Decoder != null){
-					mG7221Decoder.decode(tmpBuf, buf);
+					byte[] inBuf = new byte[INPUT_BUFFSIZE * 2];
+					byte[] outBuf = new byte[OUTPUT_BUFFSIZE * 2];
+					int len = mInput.read(inBuf, 0, mn16bitWordsPerFrame * 2);
+
+					if(len == -1)
+						return -1;
+				
+					int decodeRet = mG7221Decoder.decode(inBuf, mn16bitWordsPerFrame, outBuf);
+
+					System.arraycopy(outBuf, 0, buf, nRes, decodeRet * 2);
+
+					nRes = decodeRet*2;
 				}
 				break;
 			default:
-				for(int i = 0; i < mHeader.m_sBlock; i++)
-					buf[i] = tmpBuf[i];
-				
-				nRes = mHeader.m_sBlock;
+				{
+					byte[] tmpBuf = new byte[mMinBufSize*2];
+					int len = mInput.read(tmpBuf, 0, mHeader.m_sBlock);
+	
+					if(len == -1)
+						return -1;
+					
+					System.arraycopy(tmpBuf, 0, buf, 0,  mHeader.m_sBlock);
+					
+					nRes = mHeader.m_sBlock;
+				}
 				break;
 			}
 		} catch (Exception e) {
@@ -238,14 +270,14 @@ public class AudioPlayer implements Runnable{
 	// run in play thread
 	private void doFilePlay(){
 		mThreadRunning = true;
-		byte[] buf = new byte[mMinBufSize*2];
+		byte[] buf = new byte[mMinBufSize*2]; 
 		int flag = 1;
 		while(mThreadRunning){
 			if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
 				int temp = 0;
 				temp = getBufferToPlay(buf, flag++);
 				//播放完成
-				if(temp == -1)
+				if(temp == 0 || temp == -1)
 					break;
 				
 				audioWriteByteBuffer(buf, temp);

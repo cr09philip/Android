@@ -5,9 +5,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-import com.example.hellojni.AdpcmDecoder;
-import com.example.hellojni.G7221Decoder;
-
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
@@ -16,7 +13,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.util.Log;
-import cn.kc.demo.model.FileHeader;
+
+import com.androidsoft.decoder.AdpcmDecoder;
 /**
  * @author cr09philip
  * 

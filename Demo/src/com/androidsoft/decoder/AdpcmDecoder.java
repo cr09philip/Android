@@ -1,4 +1,4 @@
-package com.example.hellojni;
+package com.androidsoft.decoder;
 
 public class AdpcmDecoder {
 	private int mSampleRate = 0;
@@ -8,7 +8,7 @@ public class AdpcmDecoder {
 	
 	
     static {
-        System.loadLibrary("hello-jni");
+        System.loadLibrary("as-decoder-jni");
     }
     
 	public AdpcmDecoder(int sampleRate, boolean isStereo, boolean is16Bit, int blockSize){
