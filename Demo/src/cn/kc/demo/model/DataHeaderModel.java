@@ -1,5 +1,7 @@
 package cn.kc.demo.model;
 
+import java.io.UnsupportedEncodingException;
+
 import cn.kc.demo.utils.CodeUtil;
 
 public class DataHeaderModel /*extends NetHeaderModel*/ {
@@ -41,7 +43,9 @@ public class DataHeaderModel /*extends NetHeaderModel*/ {
 		this.m_sBlock = CodeUtil.makeShort(header,index);
 		index += 2;
 
-		this.m_strFileName = new String(header, index, DataHeaderModel.FILE_NAME_LENGTH);
+		String str = new String(header, index, DataHeaderModel.FILE_NAME_LENGTH);
+		this.m_strFileName = str.trim();
+		
 		index += DataHeaderModel.FILE_NAME_LENGTH;
 		
 		this.m_nDataLength = CodeUtil.makeInt(header,index);

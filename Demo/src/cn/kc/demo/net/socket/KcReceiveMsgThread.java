@@ -51,6 +51,10 @@ public class KcReceiveMsgThread implements Runnable {
 		mServer = server;
 		mSocket = socket;
 		mAppPath = path;
+		File file = new File(path);
+		if( !file.exists()){
+			file.mkdir();
+		}
 	}
 	public class ReceiveInfo{
 		public int total;
@@ -179,6 +183,14 @@ public class KcReceiveMsgThread implements Runnable {
 						}
 						
 						File file = new File(oldname);
+						if (!file.exists()) {  
+			              try {  
+			                  //在指定的文件夹中创建文件  
+			            	  file.createNewFile();  
+			              } catch (Exception e) {  
+			            	  Log.d("", "");
+				          }  
+				        }  
 						RandomAccessFile outputWrite = new RandomAccessFile(file,"rw");
 
 						FileHeader fileHeader = new FileHeader(dataHeader);
