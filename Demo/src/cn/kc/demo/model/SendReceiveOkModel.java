@@ -1,8 +1,5 @@
 package cn.kc.demo.model;
 
-import java.util.Arrays;
-
-import cn.kc.demo.R.array;
 
 //Function FUNCTION_FILE_OK = 1
 public class SendReceiveOkModel extends NetHeaderModel{

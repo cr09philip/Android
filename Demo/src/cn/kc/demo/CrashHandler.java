@@ -14,10 +14,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import cn.kc.demo.utils.FileUtil;
-import cn.kc.demo.view.FolderListActivity;
-import cn.kc.demo.view.VoiceListActivity;
-
 import android.content.Context;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
@@ -28,6 +24,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
+import cn.kc.demo.utils.FileUtil;
+import cn.kc.demo.view.FolderListActivity;
    
 /** 
  * UncaughtException处理类,当程序发生Uncaught异常的时候,由该类来接管程序,并记录发送错误报告. 

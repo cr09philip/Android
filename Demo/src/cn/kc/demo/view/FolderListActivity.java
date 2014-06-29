@@ -3,7 +3,6 @@ package cn.kc.demo.view;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.Comparator;
 
 import android.app.Activity;
@@ -11,7 +10,6 @@ import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,7 +23,6 @@ import cn.kc.demo.CrashHandler;
 import cn.kc.demo.R;
 import cn.kc.demo.adapter.FolderAdapter;
 import cn.kc.demo.model.FolderModel;
-import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.Utils;
 

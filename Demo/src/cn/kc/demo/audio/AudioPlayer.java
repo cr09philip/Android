@@ -8,7 +8,6 @@ import java.io.IOException;
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
-import android.media.AudioTimestamp;
 import android.media.AudioTrack;
 import android.os.Handler;
 import android.os.Looper;

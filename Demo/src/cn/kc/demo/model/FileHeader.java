@@ -1,7 +1,5 @@
 package cn.kc.demo.model;
 
-import java.util.Arrays;
-
 import cn.kc.demo.utils.CodeUtil;
 
 public class FileHeader {

@@ -3,12 +3,8 @@ package cn.kc.demo;
 
 import java.util.Stack;
 
-import cn.kc.demo.view.VoiceListActivity;
-
 import android.app.Activity;
 import android.app.Application;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.Editor;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;

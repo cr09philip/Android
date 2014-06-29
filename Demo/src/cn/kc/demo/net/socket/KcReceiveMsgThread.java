@@ -6,20 +6,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.RandomAccessFile;
 import java.net.Socket;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 
-import android.app.AlertDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Message;
-import android.os.SystemClock;
 import android.util.Log;
 import android.util.Pair;
-import cn.kc.demo.R;
 import cn.kc.demo.model.DataHeaderModel;
 import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.model.MusicInfoModel;
@@ -28,10 +22,8 @@ import cn.kc.demo.model.SendReSendFileModel;
 import cn.kc.demo.model.SendReceiveErrorModel;
 import cn.kc.demo.model.SendReceiveOkModel;
 import cn.kc.demo.model.SendTimeInfoModel;
-import cn.kc.demo.net.socket.KcSocketServer.ClientInfo;
 import cn.kc.demo.net.socket.KcSocketServer.DownloadInfoHandler;
 import cn.kc.demo.utils.FileUtil;
-import cn.kc.demo.utils.Utils;
 import cn.kc.demo.view.VoiceListActivity;
 
 public class KcReceiveMsgThread implements Runnable {
@@ -380,7 +372,7 @@ public class KcReceiveMsgThread implements Runnable {
 				if((mContext.mListMusicInfoModels.size() -1 - begin.first)/2 > array.size() -1){
 					
 					for(Pair<Integer, Integer> item : array){
-						SendReSendFileModel model = new SendReSendFileModel((byte)1, item.first.shortValue(), item.second);
+						SendReSendFileModel model = new SendReSendFileModel((byte)1, (short) array.size(), item.first.shortValue(), item.second);
 						
 						try {
 							outputStream.write(model.toBinStream());
@@ -396,7 +388,7 @@ public class KcReceiveMsgThread implements Runnable {
 			}
 
 			//send resend 0 ,resend all after first
-			SendReSendFileModel model = new SendReSendFileModel((byte)0, begin.first.shortValue(), begin.second);
+			SendReSendFileModel model = new SendReSendFileModel((byte)0, (short) array.size(), begin.first.shortValue(), begin.second);
 			
 			try {
 				outputStream.write(model.toBinStream());

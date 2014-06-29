@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.List;
 
 public class MusicInfoModel {
 	public static final int DOWNLOAD_STATUS_BEGIN = 0;

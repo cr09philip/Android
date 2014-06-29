@@ -17,7 +17,6 @@ import android.widget.Toast;
 import cn.kc.demo.R;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcReceiveMsgThread.ReceiveInfo;
-import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.Utils;
 import cn.kc.demo.utils.WifiUtil;
 import cn.kc.demo.view.VoiceListActivity;

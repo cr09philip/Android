@@ -193,7 +193,7 @@ public class VoiceListActivity extends Activity
 		mLastFileNum = mSharedPerferences.getInt(SP_LAST_FILE_NUM, 0);
 
 		mListMusicInfoModels = new ArrayList<MusicInfoModel>();
-		GetFiles(mFolderPath, "vox", false);
+		GetFiles(mFolderPath, null, false);
 
 		mMusicAdapter = new MusicAdapter(this);
 		mMusicAdapter.setList(mListMusicInfoModels);

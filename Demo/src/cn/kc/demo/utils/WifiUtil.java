@@ -12,7 +12,6 @@ import android.content.Context;
 import android.content.IntentFilter;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiManager;
-import android.util.Log;
 import cn.kc.demo.model.DevicesInfoModel;
 
 public class WifiUtil {

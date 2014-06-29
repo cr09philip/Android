@@ -14,8 +14,6 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 import cn.kc.demo.R;
-import cn.kc.demo.R.id;
-import cn.kc.demo.R.layout;
 import cn.kc.demo.adapter.ArrayListAdapter;
 import cn.kc.demo.adapter.DeviceAdapter;
 import cn.kc.demo.interfaces.IReceiverWifiCallBack;
