@@ -222,7 +222,7 @@ public class KcReceiveMsgThread implements Runnable {
 
 						// 将InputStream当中的数据取出，并写入到文件
 						// 以包中的數據長度為依據
-						
+						boolean isFailNeedDelete = true;
 						while (nRemain > 0) {
 //								int temp = inputStream.read(buffer);
 							int size2read = nRemain > 4*1024 ? 4*1024 : nRemain;
@@ -233,6 +233,7 @@ public class KcReceiveMsgThread implements Runnable {
 							if (temp == -1 && nRemain > 0) {
 								// 失敗存儲序號到list
 								Log.d(TAG, "SOCKET Buffer read error");
+								isFailNeedDelete = false;
 								break;
 							}
 
@@ -287,7 +288,8 @@ public class KcReceiveMsgThread implements Runnable {
 
 							mServer.mHandler.sendMessage(finishMsg);
 						}else{ //失败处理
-							file.delete();
+							if(isFailNeedDelete)
+								file.delete();
 							
 							Pair<Short, Integer> pair = new Pair<Short, Integer>(sFileIndex, nDownloadOffsetPerFile);
 							mListError.add( pair);

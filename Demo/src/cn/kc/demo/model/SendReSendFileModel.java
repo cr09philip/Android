@@ -4,6 +4,8 @@ import cn.kc.demo.utils.CodeUtil;
 
 //FUNCTION_RESEND_INFO   = 3;  //文件续传
 public class SendReSendFileModel extends NetHeaderModel {
+	
+	private static final int RESEND_CMD_HEADER_FIXED_SIZE = NetHeaderModel.NET_HEADER_FIXED_SIZE + 9;
 	byte m_mode = 0;
 	short m_nCount;
 	short m_nIndex = 0;
@@ -17,7 +19,7 @@ public class SendReSendFileModel extends NetHeaderModel {
 	}
 	
 	public byte[] toBinStream(){
-		byte[] resBuf = new byte[16];
+		byte[] resBuf = new byte[RESEND_CMD_HEADER_FIXED_SIZE];
 
 		byte[] header = super.toBinStream();
 		for (int i = 0; i < header.length; i++){
