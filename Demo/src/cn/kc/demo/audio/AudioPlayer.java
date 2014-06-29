@@ -114,6 +114,12 @@ public class AudioPlayer implements Runnable{
 	 */
 	public boolean init(String path){
 		boolean ret = false;
+		
+		if (mAudioTrack != null) {
+			release();
+			mAudioTrack = null;
+		}
+		
 		try {
 			mInput = new FileInputStream( new File(path) );
 			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
@@ -228,11 +234,6 @@ public class AudioPlayer implements Runnable{
 	}
 	protected void initAudioTrack() {
 		mThreadRunning = false;
-		
-		if (mAudioTrack != null) {
-			release();
-			mAudioTrack = null;
-		}
 
 		if(mHeader != null){
 			mFrequency = mHeader.m_bSamples * 1000;
