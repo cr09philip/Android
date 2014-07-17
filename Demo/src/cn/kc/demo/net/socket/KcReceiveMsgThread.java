@@ -23,6 +23,7 @@ import cn.kc.demo.model.SendReceiveErrorModel;
 import cn.kc.demo.model.SendReceiveOkModel;
 import cn.kc.demo.model.SendTimeInfoModel;
 import cn.kc.demo.net.socket.KcSocketServer.DownloadInfoHandler;
+import cn.kc.demo.utils.CodeUtil;
 import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.view.VoiceListActivity;
 
@@ -382,19 +383,35 @@ public class KcReceiveMsgThread implements Runnable {
 			});
 
 			Pair<Integer, Integer> begin = array.get(0);
-			if(array.size() > 3){				
+			if(array.size() > 2){				
 				if((mContext.mListMusicInfoModels.size() -1 - begin.first)/2 > array.size() -1){
 					
+					boolean isHeaderSend = false;
 					for(Pair<Integer, Integer> item : array){
-						SendReSendFileModel model = new SendReSendFileModel((byte)1, (short) array.size(), item.first.shortValue(), item.second);
+						if( !isHeaderSend ){
+							SendReSendFileModel model = new SendReSendFileModel((byte)1, (short) array.size(), item.first.shortValue(), item.second);
 						
-						try {
-							outputStream.write(model.toBinStream());
-							outputStream.flush();
-						} catch (IOException e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
+							try {
+								outputStream.write(model.toBinStream());
+								outputStream.flush();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+							
+							isHeaderSend = true;
 						}
+						else{
+							try {
+								byte[] index = CodeUtil.short2bytes(item.first.shortValue(), true);
+								outputStream.write(index);
+								byte[] offset = CodeUtil.int2bytes(item.second, true);
+								outputStream.write( offset );
+								outputStream.flush();
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
+						}
+						
 					}
 					
 					return true;
@@ -406,9 +423,9 @@ public class KcReceiveMsgThread implements Runnable {
 			
 			try {
 				outputStream.write(model.toBinStream());
+				
 				outputStream.flush();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			
