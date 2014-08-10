@@ -1,2 +1,2 @@
 set solib-search-path ./obj/local/armeabi
-directory /home/kingly/software/dev/android-ndk-r8e/platforms/android-14/arch-arm/usr/include ./g7221_decoder/ jni /home/kingly/software/dev/android-ndk-r8e/sources/cxx-stl/system
+directory D:/cygwin/home/cannahan/dev/android-ndk-r10/platforms/android-19/arch-arm/usr/include ./g7221_decoder/ jni D:/cygwin/home/cannahan/dev/android-ndk-r10/sources/cxx-stl/system

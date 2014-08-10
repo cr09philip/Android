@@ -51,6 +51,32 @@ public class G7221Decoder {
 	 */
 	public native int decode(Object inBuf, int inBufLen, Object outBuf);
 	
+	
+	/**
+	 * 解码inBuf内容到outBuf:
+	 * 读取40个short到左声道数据，然后读取40个short的右声道数据
+	 * 
+	 * @param inLBuf：   short[]
+	 * 		   	左声道数据
+	 * 
+	 * @param inLBufLen：
+	 * 			左声道数据的长度，40
+	 *
+	 * @param inRBuf：   short[]
+	 * 		   	右声道数据
+	 * 
+	 * @param inRBufLen：
+	 * 			右声道数据的长度，40
+	 *  
+	 * @param outBuf： byte[]
+	 * 			outBuf 大小为 80 * 4 * 4 = 1280
+	 * 
+	 * @return 解码后数据将会放到outBuf
+	 * 			
+	 */
+	public native int decodeMono(Object inLBuf, int inLBufLen, 
+			Object inRBuf, int inRBufLen, Object outBuf);
+	
 	/**
 	 * 释放G7221Decoder
 	 *

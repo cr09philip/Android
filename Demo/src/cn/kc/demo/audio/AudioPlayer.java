@@ -1,8 +1,11 @@
 package cn.kc.demo.audio;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 
 import android.content.Context;
@@ -191,18 +194,43 @@ public class AudioPlayer implements Runnable{
 				break;
 			case 1://G.722.1
 				if( mG7221Decoder != null){
-					byte[] inBuf = new byte[INPUT_BUFFSIZE * 2];
-					byte[] outBuf = new byte[OUTPUT_BUFFSIZE * 2];
-					int len = mInput.read(inBuf, 0, mn16bitWordsPerFrame * 2);
+					if(mHeader.isStereo()){
+						//stereo
+						int inBufValidLen = mn16bitWordsPerFrame * 2;
 
-					if(len == -1)
-						return -1;
-				
-					int decodeRet = mG7221Decoder.decode(inBuf, mn16bitWordsPerFrame, outBuf);
+						byte[] inLBuf = new byte[INPUT_BUFFSIZE * 2];
+						byte[] inRBuf = new byte[INPUT_BUFFSIZE * 2];
+						byte[] outBuf = new byte[OUTPUT_BUFFSIZE * 2];
+					
+						if ( -1 != mInput.read(inLBuf, 0, inBufValidLen) &&
+								-1 != mInput.read(inLBuf, 0, inBufValidLen)) {
+							int outputLen = mG7221Decoder.decodeMono(inLBuf,
+									mn16bitWordsPerFrame,
+									inRBuf, 
+									mn16bitWordsPerFrame,
+									outBuf);
 
-					System.arraycopy(outBuf, 0, buf, nRes, decodeRet * 2);
+							System.arraycopy(outBuf, 0, buf, 0, outputLen);
+							
+							nRes = outputLen;
+						}
+					}
+					else{
+						//mono 
+						byte[] inBuf = new byte[INPUT_BUFFSIZE * 2];
+						byte[] outBuf = new byte[OUTPUT_BUFFSIZE * 2];
+						int len = mInput.read(inBuf, 0, mn16bitWordsPerFrame * 2);
 
-					nRes = decodeRet*2;
+						if(len == -1)
+							return -1;
+					
+						int decodeRet = mG7221Decoder.decode(inBuf, mn16bitWordsPerFrame, outBuf);
+
+						System.arraycopy(outBuf, 0, buf, 0, decodeRet * 2);
+
+						nRes = decodeRet*2;
+					}
+					
 				}
 				break;
 			default:
@@ -270,7 +298,12 @@ public class AudioPlayer implements Runnable{
 	// run in play thread
 	private void doFilePlay(){
 		mThreadRunning = true;
-		byte[] buf = new byte[mMinBufSize*2]; 
+		byte[] buf = null;
+		if(mHeader.m_bFormatTag == 0){//adpcm
+			buf = new byte[mMinBufSize*2]; 
+		}else if(mHeader.m_bFormatTag == 1){//g722
+			buf = new byte[OUTPUT_BUFFSIZE *2 ];
+		}
 		int flag = 1;
 		while(mThreadRunning){
 			if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){

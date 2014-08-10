@@ -56,7 +56,7 @@ public class HelloJni extends Activity {
 
 		mPlayer = new AdpcmPlayer("/mnt/sdcard/1.vox");
 
-		mG7221DecoerThread = new Thread(new DecodeThreadRunnable(),
+		mG7221DecoerThread = new Thread(new DecodeThreadRunnable2(),
 				"G7721DecodeThread");
 		mG7221DecoerThread.start();
 	}
@@ -72,7 +72,7 @@ public class HelloJni extends Activity {
 		}
 
 		public void run() {
-			String filePath = "/storage/sdcard0/g7221.vox";
+			String filePath = "/mnt/sdcard/g7221.vox";
 
 			mG7221Decoder = new G7221Decoder();
 			int number_of_16bit_words_per_frame = mG7221Decoder.init(32000,
@@ -99,11 +99,12 @@ public class HelloJni extends Activity {
 			BufferedInputStream in = null;
 			BufferedOutputStream out = null;
 
+			
 			try {
 				in = new BufferedInputStream(new FileInputStream(f));
 
 				FileOutputStream outSTr = new FileOutputStream(new File(
-						"/storage/sdcard0/mytest.pcm"));
+						"/mnt/sdcard/java.pcm"));
 				out = new BufferedOutputStream(outSTr);
 
 				int len = 0;
@@ -132,6 +133,79 @@ public class HelloJni extends Activity {
 		}
 	}
 
+	
+	
+	private class DecodeThreadRunnable2 implements Runnable {
+		public DecodeThreadRunnable2() {
+		}
+
+		public void run() {
+			String filePath = "/mnt/sdcard/g722_2.vox";
+
+			mG7221Decoder = new G7221Decoder();
+			int number_of_16bit_words_per_frame = mG7221Decoder.init(32000,
+					7000);
+			if (number_of_16bit_words_per_frame == 0) {
+				Log.v(TAG, "init g7221 decoder fail");
+				return;
+			}
+
+			int inBufValidLen = number_of_16bit_words_per_frame * 2;
+			Log.v(TAG, "number_of_16bit_words_per_frame = " + inBufValidLen);
+
+			// short inBuf = new short[INPUT_BUFFSIZE];
+			// short outBuf = new short[OUTPUT_BUFFSIZE];
+			byte[] inLBuf = new byte[INPUT_BUFFSIZE * 2];
+			byte[] inRBuf = new byte[INPUT_BUFFSIZE * 2];
+			byte[] outBuf = new byte[OUTPUT_BUFFSIZE * 2];
+
+			File f = new File(filePath);
+			if (!f.exists()) {
+				mG7221Decoder.uninit();
+				return;
+			}
+
+			BufferedInputStream in = null;
+			BufferedOutputStream out = null;
+
+			
+			try {
+				in = new BufferedInputStream(new FileInputStream(f));
+
+				FileOutputStream outSTr = new FileOutputStream(new File(
+						"/mnt/sdcard/g722_2.pcm"));
+				out = new BufferedOutputStream(outSTr);
+
+				int len = 0;
+				while (-1 != (len = in.read(inLBuf, 0, inBufValidLen)) &&
+						-1 != (len = in.read(inLBuf, 0, inBufValidLen))) {
+					Log.v(TAG, "read len = " + len);
+					int outputLen = mG7221Decoder.decodeMono(inLBuf,
+							number_of_16bit_words_per_frame,
+							inRBuf, 
+							number_of_16bit_words_per_frame,
+							outBuf);
+					Log.v(TAG, "decoded frame len by byte = " + outputLen);
+					out.write(outBuf, 0, outputLen);				
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				// throw e;
+			} finally {
+				try {
+					in.close();
+
+					out.flush();
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+
+			mG7221Decoder.uninit();
+		}
+	}
+	
 	@Override
 	protected void onPause() {
 		// TODO Auto-generated method stub

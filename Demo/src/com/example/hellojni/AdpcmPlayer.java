@@ -15,16 +15,17 @@ import android.util.Log;
 
 public class AdpcmPlayer {
 	private final String TAG = "AdpcmPlayer";
-	//闊抽鍙傛暟
+	//音频参数
 	private int mSampleRate = 0;
 	private boolean mIsStereo = false;
 	private boolean mIs16Bit = false;
 	private int mBlockSize = 0;
 	
-	//闊抽鏂囦欢
+	//音频文件
 	private String mAudioFile = null;
 	
-	//adpcm瑙ｇ爜鍣�	private AdpcmDecoder mAdpcmDecoder = null;
+	//adpcm解码器
+	private AdpcmDecoder mAdpcmDecoder = null;
 		
 	private AudioTrack mAudioTrack = null;  
 	private Thread mAudioThread = null;
@@ -35,7 +36,6 @@ public class AdpcmPlayer {
 	private Object mOutBuf = null;
 	
 	private int mDecodeIndex = 1;
-	protected AdpcmDecoder mAdpcmDecoder;
 	
 	public AdpcmPlayer(String audioFile){
 		mSampleRate = 16000;
