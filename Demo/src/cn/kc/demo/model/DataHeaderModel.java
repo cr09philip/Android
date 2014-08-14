@@ -1,7 +1,5 @@
 package cn.kc.demo.model;
 
-import java.io.UnsupportedEncodingException;
-
 import cn.kc.demo.utils.CodeUtil;
 
 public class DataHeaderModel /*extends NetHeaderModel*/ {
@@ -11,7 +9,7 @@ public class DataHeaderModel /*extends NetHeaderModel*/ {
 	public static final int FILE_NAME_LENGTH = 35;
 	public static final int DATA_HEADER_FIXED_SIZE = 48;
 	
-	public byte m_bFileIndex;
+	public int m_nFileIndex;
 	public short m_sFileNum;//10	FILENUM	2	文件总数量	
 	public byte m_bFormatTag;//12	FormatTag	1	编码格式类型	00—	IMA-ADPCM；01- g.722.1
 							//其他以待扩展
@@ -29,8 +27,7 @@ public class DataHeaderModel /*extends NetHeaderModel*/ {
 	
 						//	58	DATA	不定	信息数据
 	
-	public DataHeaderModel(byte[] header, int start, int fileIndex){
-		this.m_bFileIndex = (byte) fileIndex;
+	public DataHeaderModel(byte[] header, int start){
 		int index = start;
 		this.m_sFileNum = CodeUtil.makeShort(header,index);
 		index += 2;
@@ -45,6 +42,9 @@ public class DataHeaderModel /*extends NetHeaderModel*/ {
 
 		String str = new String(header, index, DataHeaderModel.FILE_NAME_LENGTH);
 		this.m_strFileName = str.trim();
+		
+		String strFileIndex = str.substring(1, 7);
+		this.m_nFileIndex = Integer.parseInt(strFileIndex);
 		
 		index += DataHeaderModel.FILE_NAME_LENGTH;
 		

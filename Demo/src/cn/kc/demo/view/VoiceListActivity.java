@@ -498,7 +498,7 @@ public class VoiceListActivity extends Activity
     		RefreshAllPlayInfo(obj.info);
     	}
     	
-		RefreshDownInfo(obj.info.m_nDownPercent, obj.info.m_nDownLoadSpeed, obj.info.m_sIndex, obj.total);
+		RefreshDownInfo(obj.info.m_nDownPercent, obj.info.m_nDownLoadSpeed, obj.info.m_nIndex, obj.total);
 	}
 
 	public void onDownLoadEnd(ReceiveInfo obj) {
@@ -516,7 +516,7 @@ public class VoiceListActivity extends Activity
     	mMusicAdapter.notifyDataSetChanged();
 
     	mBeginTime = 0;
-    	RefreshDownInfo(obj.info.m_nDownPercent, obj.info.m_nDownLoadSpeed, obj.info.m_sIndex, obj.total);
+    	RefreshDownInfo(obj.info.m_nDownPercent, obj.info.m_nDownLoadSpeed, obj.info.m_nIndex, obj.total);
     	
 //    	mMusicAdapter.setList(mListMusicInfoModels);
 	}
@@ -542,7 +542,7 @@ public class VoiceListActivity extends Activity
         	float fSpeed = item.mTotalBytes*1000000000/(System.nanoTime() - item.mStartNanoSecs);
         	fSpeed /= (1024*128);
 //        	float fSpeed = (float) (9.0f + Math.random());
-        	RefreshDownInfo(obj.info.m_nDownPercent, fSpeed, obj.info.m_sIndex, obj.total);
+        	RefreshDownInfo(obj.info.m_nDownPercent, fSpeed, obj.info.m_nIndex, obj.total);
     	}
     	
 //    	mMusicAdapter.setList(mListMusicInfoModels);
@@ -564,7 +564,7 @@ public class VoiceListActivity extends Activity
     		RefreshAllPlayInfo(item);
     	
     	mMusicAdapter.notifyDataSetChanged();
-    	RefreshDownInfo(obj.info.m_nDownPercent, obj.info.m_nDownLoadSpeed, obj.info.m_sIndex, obj.total);
+    	RefreshDownInfo(obj.info.m_nDownPercent, obj.info.m_nDownLoadSpeed, obj.info.m_nIndex, obj.total);
 	}
 	
 	public int getListMusicInfoSize(){

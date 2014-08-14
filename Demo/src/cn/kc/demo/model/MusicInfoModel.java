@@ -12,8 +12,8 @@ public class MusicInfoModel {
 	public static final int DOWNLOAD_STATUS_LOCAL = 3;
 	public static final int DOWNLOAD_STATUS_ERROR = 4;
 	
-	
-	public short m_sIndex;
+	public short m_sFileNum;
+	public int m_nIndex;
 	public String m_strName;	//just name under apps path
 	
 	public int m_nDownloadStatus; // 0 未下载   1 下载中 此时 2下载完成  3本地文件 4失败
@@ -27,7 +27,7 @@ public class MusicInfoModel {
 	
 	public int m_nDownLoadSpeed; // KBytes/s
 	
-	public boolean m_isNeedContuinue;
+	public boolean m_isNeedContinue;
 	public boolean m_isPlaying;
 	
 	public long mTotalBytes;
@@ -36,7 +36,8 @@ public class MusicInfoModel {
 	public MusicInfoModel(){
 		m_strName = null;
 		
-		m_sIndex = (short) 0;
+		m_sFileNum = (short) 0;
+		m_nIndex = 0;
 		m_nDownloadStatus =
 		m_nDownPercent = 
 		m_nDownLoadOffset = 
@@ -45,15 +46,16 @@ public class MusicInfoModel {
 		m_nCurProgress = 
 		m_nDownLoadSpeed = 
 		m_nErrorTimes = 0;
-		m_isNeedContuinue = false;
+		m_isNeedContinue = false;
 		m_isPlaying = false;
 		
 		mTotalBytes = 0;
 		mStartNanoSecs = 0;
 	}
 	
-	public MusicInfoModel(short index, String path, int duration ){		
-		m_sIndex = index;
+	public MusicInfoModel(int index, short fileNum, String path, int duration ){	
+		m_sFileNum = (short) 0;
+		m_nIndex = index;
 		m_strName = path;
 		
 		m_nDownloadStatus = 0;
@@ -65,7 +67,7 @@ public class MusicInfoModel {
 		m_nCurProgress = 0;
 		
 		m_nDownLoadSpeed = 0;
-		m_isNeedContuinue = false;
+		m_isNeedContinue = false;
 		m_isPlaying = false;
 		
 		mTotalBytes = 0;
@@ -109,7 +111,8 @@ public class MusicInfoModel {
 			
 			newInfo.m_strName = file.getName();
 			
-			newInfo.m_sIndex = (short) fileHeader.m_bFileIndex;
+			newInfo.m_sFileNum = fileHeader.m_sFileNum;
+			newInfo.m_nIndex = fileHeader.m_nFileIndex;
 			newInfo.m_nDownLoadOffset = fileHeader.m_nOffset;
 			newInfo.m_nDuration = fileHeader.m_nDuration;
 			newInfo.m_nDownLoadSpeed = 0;
@@ -118,7 +121,7 @@ public class MusicInfoModel {
 			newInfo.m_nDownPercent = fileHeader.getFileDownloadPercent();
 			
 			if(fileHeader.m_nLength > fileHeader.m_nOffset)
-				newInfo.m_isNeedContuinue = true;
+				newInfo.m_isNeedContinue = true;
 			
 		} catch (FileNotFoundException e) {
 			newInfo = null;

@@ -30,7 +30,7 @@ import cn.kc.demo.view.VoiceListActivity;
 public class KcReceiveMsgThread implements Runnable {
 	private static final String TAG = "KcReceiveMsgThread";
 	private Socket mSocket = null;
-	private ArrayList<Pair<Short, Integer>> mListError = new ArrayList<Pair<Short, Integer>>();
+	private ArrayList<Pair<Integer, Integer>> mListError = new ArrayList<Pair<Integer, Integer>>();
 	private String mAppPath;
 
 	public String getAppPath() {
@@ -65,7 +65,7 @@ public class KcReceiveMsgThread implements Runnable {
 			info = obj;
 		}
 		public ReceiveInfo() {
-			// TODO Auto-generated constructor stub
+
 		}
 	}
 	
@@ -78,10 +78,10 @@ public class KcReceiveMsgThread implements Runnable {
 		int ret = // (int) (mDownloadBytes/1024/ (1024 * (curMillis - mStartMillis)));
 		(int) ((mDownloadBytes/1024 ) / secs);
 		
-		if(ret/1024 > 100)
-		{
-			Log.d("SpeedError", "Bytes:" + mDownloadBytes + " millis:" + (curMillis - mStartMillis));
-		}
+//		if(ret/1024 > 100)
+//		{
+//			Log.d("SpeedError", "Bytes:" + mDownloadBytes + " millis:" + (curMillis - mStartMillis));
+//		}
 		return ret;
 //		(bytes /1024 ) / ( sec /1000)
 	}
@@ -106,7 +106,7 @@ public class KcReceiveMsgThread implements Runnable {
 				mBytesToDownload = header.mLength;
 				mDownloadBytes = NetHeaderModel.NET_HEADER_FIXED_SIZE;
 				mStartMillis = System.nanoTime();//System.currentTimeMillis();//SystemClock.uptimeMillis();
-				short sFileIndex = 0;
+//				short sFileIndex = 0;
 				
 				// 做相应的处理
 				switch (header.mFunction) {
@@ -135,7 +135,7 @@ public class KcReceiveMsgThread implements Runnable {
 					mServer.mHandler.sendMessage(getConnectMsg());
 					
 					// 接收并存儲到本地
-					DataHeaderModel dataHeader = SocketDataParser.readDataHeader(inputStream, sFileIndex);
+					DataHeaderModel dataHeader = SocketDataParser.readDataHeader(inputStream);
 					ReceiveInfo info = new ReceiveInfo();
 
 					int nDownloadOffsetPerFile = 0;
@@ -146,7 +146,7 @@ public class KcReceiveMsgThread implements Runnable {
 							MusicInfoModel music = mContext.getMusicInfoModelByName(dataHeader.m_strFileName);
 							if(music != null){
 								nDownloadOffsetPerFile = music.m_nDownLoadOffset;
-								if( !music.m_isNeedContuinue){
+								if( !music.m_isNeedContinue){
 									mIsPause = true;
 									Message msg = new Message();
 									msg.what = KcSocketServer.DownloadInfoHandler.SOCKET_RENAME_FILE;
@@ -176,9 +176,7 @@ public class KcReceiveMsgThread implements Runnable {
 								do{
 									toskip -= inputStream.skip(toskip);
 								}while(toskip > 0);
-								
-								// 讀下一個文件的文件頭
-//								dataHeader = SocketDataParser.readDataHeader(inputStream);
+								//break switch to receive next file header
 								break;
 							}
 						}
@@ -189,7 +187,6 @@ public class KcReceiveMsgThread implements Runnable {
 			                  //在指定的文件夹中创建文件  
 			            	  file.createNewFile();  
 			              } catch (Exception e) {  
-			            	  Log.d("", "");
 				          }  
 				        }  
 						RandomAccessFile outputWrite = new RandomAccessFile(file,"rw");
@@ -197,7 +194,7 @@ public class KcReceiveMsgThread implements Runnable {
 						FileHeader fileHeader = new FileHeader(dataHeader);
 						
 						//发送消息 新下载任务
-						MusicInfoModel newInfo = getMusicModel(sFileIndex, dataHeader.m_strFileName, fileHeader.m_nDuration);
+						MusicInfoModel newInfo = getMusicModel(dataHeader.m_nFileIndex, dataHeader.m_sFileNum, dataHeader.m_strFileName, fileHeader.m_nDuration);
 						
 						newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_BEGIN;
 						newInfo.m_nDownPercent = 0;
@@ -269,7 +266,6 @@ public class KcReceiveMsgThread implements Runnable {
 						}
 
 						outputWrite.close();
-						sFileIndex++;
 						
 						// 此时发送该文件接收完成消息，即时更新界面
 						if(nDownloadOffsetPerFile == fileHeader.m_nLength){
@@ -292,7 +288,7 @@ public class KcReceiveMsgThread implements Runnable {
 							if(isFailNeedDelete)
 								file.delete();
 							
-							Pair<Short, Integer> pair = new Pair<Short, Integer>(sFileIndex, nDownloadOffsetPerFile);
+							Pair<Integer, Integer> pair = new Pair<Integer, Integer>(dataHeader.m_nFileIndex, nDownloadOffsetPerFile);
 							mListError.add( pair);
 
 							info.total = dataHeader.m_sFileNum;
@@ -338,8 +334,6 @@ public class KcReceiveMsgThread implements Runnable {
 						
 						mListError.clear();
 					}
-					
-					sFileIndex = 0;
 
 					mServer.mHandler.sendMessage(getDisConnectMsg());
 
@@ -361,35 +355,46 @@ public class KcReceiveMsgThread implements Runnable {
 			e.printStackTrace();
 		}
 	}
+	
+	static class ReSendFileInfo{
+		public short m_sTotalNum;
+		public short m_sFileIndex;
+		public int m_nOffset;
+		ReSendFileInfo(MusicInfoModel music){
+//			m_sTotalNum = music.m_sFileNum;
+//			m_sFileIndex = music.m_nIndex;
+//			m_nOffset = music.m_n
+		}
+	}
 
 	private boolean checkIfNeedContinue(OutputStream outputStream) {
 		//是否在这里准备断点续传
-		ArrayList<Pair<Integer,Integer>> array = new ArrayList<Pair<Integer,Integer>>();
+		ArrayList<MusicInfoModel> array = new ArrayList<MusicInfoModel>();
 		for(MusicInfoModel info : mContext.mListMusicInfoModels){
-			if(info.m_isNeedContuinue){
-				array.add(new Pair<Integer, Integer>((int) info.m_sIndex, info.m_nDownLoadOffset));
+			if(info.m_isNeedContinue){
+				array.add(info);
 			}
 		}
 		
 		if(array.size() != 0){
-			Collections.sort(array, new Comparator<Pair<Integer, Integer>>() {
+			Collections.sort(array, new Comparator<MusicInfoModel>() {
 
-				public int compare(Pair<Integer, Integer> lhs,
-						Pair<Integer, Integer> rhs) {
-					if(lhs.first > rhs.first)
+				public int compare(MusicInfoModel lhs,
+						MusicInfoModel rhs) {
+					if(lhs.m_nIndex > rhs.m_nIndex)
 						return 1;
 					return 0;
 				}
 			});
 
-			Pair<Integer, Integer> begin = array.get(0);
+			MusicInfoModel begin = array.get(0);
 			if(array.size() > 2){				
-				if((mContext.mListMusicInfoModels.size() -1 - begin.first)/2 > array.size() -1){
-					
+				if((mContext.mListMusicInfoModels.size() < (begin.m_sFileNum - begin.m_nIndex)/2)){
+					//如果需要续传的数目，小于 总数目-第一个需要续传的索引，则挨个传
 					boolean isHeaderSend = false;
-					for(Pair<Integer, Integer> item : array){
+					for(MusicInfoModel item : array){
 						if( !isHeaderSend ){
-							SendReSendFileModel model = new SendReSendFileModel((byte)1, (short) array.size(), item.first.shortValue(), item.second);
+							SendReSendFileModel model = new SendReSendFileModel((byte)1, (short) array.size(), (short)item.m_nIndex, item.m_nDownLoadOffset);
 						
 							try {
 								outputStream.write(model.toBinStream());
@@ -402,9 +407,9 @@ public class KcReceiveMsgThread implements Runnable {
 						}
 						else{
 							try {
-								byte[] index = CodeUtil.short2bytes(item.first.shortValue(), true);
+								byte[] index = CodeUtil.short2bytes((short)begin.m_nIndex, true);
 								outputStream.write(index);
-								byte[] offset = CodeUtil.int2bytes(item.second, true);
+								byte[] offset = CodeUtil.int2bytes( begin.m_nDownLoadOffset, true);
 								outputStream.write( offset );
 								outputStream.flush();
 							} catch (IOException e) {
@@ -419,7 +424,7 @@ public class KcReceiveMsgThread implements Runnable {
 			}
 
 			//send resend 0 ,resend all after first
-			SendReSendFileModel model = new SendReSendFileModel((byte)0, (short) array.size(), begin.first.shortValue(), begin.second);
+			SendReSendFileModel model = new SendReSendFileModel((byte)0, (short) array.size(), (short)begin.m_nIndex, begin.m_nDownLoadOffset);
 			
 			try {
 				outputStream.write(model.toBinStream());
@@ -435,10 +440,10 @@ public class KcReceiveMsgThread implements Runnable {
 		return false;
 	}
 
-	private MusicInfoModel getMusicModel(short sFileIndex, String fileName, int duration) {
+	private MusicInfoModel getMusicModel(int nFileIndex, short fileNum, String fileName, int duration) {
 		MusicInfoModel ret = mContext.getMusicInfoModelByName(fileName);
 		if(ret == null)
-			ret = new MusicInfoModel(sFileIndex, fileName, duration);
+			ret = new MusicInfoModel(nFileIndex, fileNum, fileName, duration);
 		
 		return ret;
 	}

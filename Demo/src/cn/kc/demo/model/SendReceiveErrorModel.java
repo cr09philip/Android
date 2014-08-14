@@ -8,9 +8,9 @@ import cn.kc.demo.utils.CodeUtil;
 
 //Function FUNCTION_FILE_ERROR   = 2
 public class SendReceiveErrorModel extends NetHeaderModel{
-	private ArrayList<Pair<Short, Integer>> mList;
+	private ArrayList<Pair<Integer, Integer>> mList;
 
-	public SendReceiveErrorModel(ArrayList<Pair<Short, Integer>> list) {
+	public SendReceiveErrorModel(ArrayList<Pair<Integer, Integer>> list) {
 		super(2*list.size(), NetHeaderModel.FUNCTION_FILE_ERROR);
 		mList = list;
 	}
@@ -19,14 +19,17 @@ public class SendReceiveErrorModel extends NetHeaderModel{
 		byte[] resBuf = new byte[10+2*mList.size()];
 		int nIndex = 0;
 		byte[] header = super.toBinStream();
-		for (int i = 0; i < header.length; i++){
-			resBuf[nIndex++] = header[i];
-		}
+		System.arraycopy(header, 0, resBuf, nIndex, header.length);
+		nIndex += header.length;
 		
 		for(int i = 0; i < mList.size(); i++){
-			byte[] sBuf = CodeUtil.short2bytes(mList.get(i).first, true);
-			resBuf[nIndex++] = sBuf[0];
-			resBuf[nIndex++] = sBuf[1];
+			System.arraycopy( 	CodeUtil.short2bytes(mList.get(i).first.shortValue(), true),
+								0, 
+								resBuf, 
+								nIndex, 
+								2);
+			
+			nIndex += 2;
 		}
 
 		return resBuf;
