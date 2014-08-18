@@ -30,11 +30,11 @@ public class SendTimeInfoModel extends NetHeaderModel{
 	public byte[] toBinStream(){
 		byte[] resBuf = new byte[17];
 		int nIndex = 0;
+		
+		
 		byte[] header = super.toBinStream();
-		for (int i = 0; i < header.length; i++){
-			resBuf[nIndex++] = header[i];
-		}
-
+		System.arraycopy(header, 0, resBuf, nIndex, header.length);
+		nIndex += header.length;
 		final Calendar c = Calendar.getInstance();
 		
 		resBuf[nIndex++] = (byte) (c.get(Calendar.YEAR) - 2000); //获取当前年份 );

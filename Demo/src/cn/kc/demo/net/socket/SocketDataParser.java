@@ -54,7 +54,12 @@ public class SocketDataParser {
 		byte[] buffer = new byte[NetHeaderModel.NET_HEADER_FIXED_SIZE];
 		if( NetHeaderModel.NET_HEADER_FIXED_SIZE != in.read(buffer, 0, NetHeaderModel.NET_HEADER_FIXED_SIZE))
 			return null;
-		return new NetHeaderModel(buffer, 0);
+		
+		NetHeaderModel netHeader = new NetHeaderModel(buffer, 0);
+		if(netHeader.mStif != (short)0xfafa)
+			return null;
+		
+		return netHeader;
 	}
 	
 	public static DataHeaderModel readDataHeader(InputStream in) throws IOException{

@@ -41,10 +41,25 @@ public class DataHeaderModel /*extends NetHeaderModel*/ {
 		index += 2;
 
 		String str = new String(header, index, DataHeaderModel.FILE_NAME_LENGTH);
-		this.m_strFileName = str.trim();
+		this.m_strFileName = str = str.trim();
+		
+		char pre = str.charAt(0);
+		if(pre == 'A' || pre == 'a'){
+			this.m_bChannels = 0; 
+		}else if( pre == 'S' || pre == 's'){
+			this.m_bChannels = 1;
+		}
 		
 		String strFileIndex = str.substring(1, 7);
 		this.m_nFileIndex = Integer.parseInt(strFileIndex);
+		
+		String post = str.substring(str.indexOf(".") + 1);
+		post = post.toLowerCase();
+		if( post.equals("vox") ){
+			this.m_bFormatTag = 0;
+		}else if( post.equals("vox") ){
+			this.m_bFormatTag = 1;
+		}
 		
 		index += DataHeaderModel.FILE_NAME_LENGTH;
 		

@@ -33,6 +33,8 @@ public class MusicInfoModel {
 	public long mTotalBytes;
 	public long mStartNanoSecs;
 	
+	public int m_nFileLength;
+	
 	public MusicInfoModel(){
 		m_strName = null;
 		
@@ -51,6 +53,8 @@ public class MusicInfoModel {
 		
 		mTotalBytes = 0;
 		mStartNanoSecs = 0;
+		
+		m_nFileLength = 0;
 	}
 	
 	public MusicInfoModel(int index, short fileNum, String path, int duration ){	
@@ -72,6 +76,8 @@ public class MusicInfoModel {
 		
 		mTotalBytes = 0;
 		mStartNanoSecs = 0;
+		
+		m_nFileLength = 0;
 	}
 	
 //	public static int getMusicFileDuration(String fullPath){
@@ -119,7 +125,7 @@ public class MusicInfoModel {
 			
 			newInfo.m_nDownloadStatus = fileHeader.getFileStatus();
 			newInfo.m_nDownPercent = fileHeader.getFileDownloadPercent();
-			
+			newInfo.m_nFileLength = fileHeader.m_nLength;
 			if(fileHeader.m_nLength > fileHeader.m_nOffset)
 				newInfo.m_isNeedContinue = true;
 			

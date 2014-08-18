@@ -489,8 +489,10 @@ public class VoiceListActivity extends Activity
 		mBeginTime = System.nanoTime();
 
 		//		info.m_sIndex = getListMusicInfoSize();
-		mListMusicInfoModels.add(obj.info);
-    	mMusicAdapter.setList(mListMusicInfoModels);
+		if( !mListMusicInfoModels.contains(obj.info)){
+			mListMusicInfoModels.add(obj.info);
+    		mMusicAdapter.setList(mListMusicInfoModels);
+		}
     	if(mCurPlayMusicInfo == null){
     		mCurPlayMusicInfo = obj.info;
     	}

@@ -14,7 +14,7 @@ public class SendReceiveOkModel extends NetHeaderModel{
 		byte[] stream = new byte[NetHeaderModel.NET_HEADER_FIXED_SIZE + 1];
 		System.arraycopy( super.toBinStream(), 0, stream, 0, NetHeaderModel.NET_HEADER_FIXED_SIZE);
 		
-		stream[NetHeaderModel.NET_HEADER_FIXED_SIZE] = (byte) (mIsNeedDeleteSendFile?1:0);
+		stream[NetHeaderModel.NET_HEADER_FIXED_SIZE] = (byte) (mIsNeedDeleteSendFile ? 1 : 0);
 		
 		return stream;		 
 	}

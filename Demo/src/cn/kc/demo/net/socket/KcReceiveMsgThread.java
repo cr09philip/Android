@@ -145,13 +145,14 @@ public class KcReceiveMsgThread implements Runnable {
 						if(FileUtil.IsFileExist(oldname)){
 							MusicInfoModel music = mContext.getMusicInfoModelByName(dataHeader.m_strFileName);
 							if(music != null){
-								nDownloadOffsetPerFile = music.m_nDownLoadOffset;
 								if( !music.m_isNeedContinue){
 									mIsPause = true;
 									Message msg = new Message();
 									msg.what = KcSocketServer.DownloadInfoHandler.SOCKET_RENAME_FILE;
 									msg.obj = new Pair<KcReceiveMsgThread, String>(KcReceiveMsgThread.this, dataHeader.m_strFileName);
 									mServer.mHandler.sendMessage(msg);	
+								}else{
+									nDownloadOffsetPerFile = music.m_nDownLoadOffset;
 								}
 							}
 						}
@@ -165,12 +166,7 @@ public class KcReceiveMsgThread implements Runnable {
 						}
 						if (mIsNeedRename != null && mIsNeedRename.first != null) {
 							if(mIsNeedRename.first.hashCode() == dataHeader.m_strFileName.hashCode()
-									&& mIsNeedRename.second == true){
-//									do{
-//										dataHeader.m_strFileName += "(1)";
-//										oldname = mAppPath + "/"+ dataHeader.m_strFileName;
-//									}while(FileUtil.IsFileExist(oldname));
-								
+									&& mIsNeedRename.second == true){								
 								//skip
 								int toskip = dataHeader.m_nDataLength;
 								do{
@@ -194,15 +190,17 @@ public class KcReceiveMsgThread implements Runnable {
 						FileHeader fileHeader = new FileHeader(dataHeader);
 						
 						//发送消息 新下载任务
-						MusicInfoModel newInfo = getMusicModel(dataHeader.m_nFileIndex, dataHeader.m_sFileNum, dataHeader.m_strFileName, fileHeader.m_nDuration);
+						MusicInfoModel newInfo = getMusicModel(dataHeader, fileHeader.m_nDuration);
 						
 						newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_BEGIN;
-						newInfo.m_nDownPercent = 0;
-						newInfo.m_nDownLoadSpeed = 0;
-						newInfo.m_nDownLoadOffset = 0;
 						newInfo.mTotalBytes = mDownloadBytes;
 						newInfo.mStartNanoSecs =  mStartMillis;
 						
+						if( mContext.getMusicInfoModelByName(dataHeader.m_strFileName) == null){
+							// 写文件头
+							outputWrite.write(fileHeader.toBinStream(), 0,FileHeader.FILE_HEADER_SIZE);
+//							outputWrite.flush();
+						}
 						
 						info.total = dataHeader.m_sFileNum;
 						info.info = newInfo;
@@ -210,10 +208,6 @@ public class KcReceiveMsgThread implements Runnable {
 						newMsg.what = KcSocketServer.DownloadInfoHandler.DOWNLOAD_BEGIN_FLAG;
 						newMsg.obj = info;
 						mServer.mHandler.sendMessage(newMsg);							
-
-						// 写文件头
-						outputWrite.write(fileHeader.toBinStream(), 0,FileHeader.FILE_HEADER_SIZE);
-//							outputWrite.flush();
 
 						byte buffer[] = new byte[4 * 1024];
 						int nRemain = dataHeader.m_nDataLength;
@@ -249,7 +243,7 @@ public class KcReceiveMsgThread implements Runnable {
 //								outputWrite.flush();
 							//发送消息 下载中 
 							newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_PROGRESSING;
-							newInfo.m_nDownPercent = calcPercent(fileHeader.m_nLength, nDownloadOffsetPerFile);
+							newInfo.m_nDownPercent = calcPercent((int)newInfo.m_nFileLength, nDownloadOffsetPerFile);
 							
 							newInfo.m_nDownLoadSpeed = 0;								
 							newInfo.m_nDownLoadOffset = nDownloadOffsetPerFile;
@@ -268,7 +262,7 @@ public class KcReceiveMsgThread implements Runnable {
 						outputWrite.close();
 						
 						// 此时发送该文件接收完成消息，即时更新界面
-						if(nDownloadOffsetPerFile == fileHeader.m_nLength){
+						if(nDownloadOffsetPerFile == info.info.m_nFileLength){
 							
 							newInfo.m_nDownloadStatus = MusicInfoModel.DOWNLOAD_STATUS_END;
 							newInfo.m_nDownPercent = 100;
@@ -354,6 +348,8 @@ public class KcReceiveMsgThread implements Runnable {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
+		finally{
+		}
 	}
 	
 	static class ReSendFileInfo{
@@ -388,7 +384,7 @@ public class KcReceiveMsgThread implements Runnable {
 			});
 
 			MusicInfoModel begin = array.get(0);
-			if(array.size() > 2){				
+			if(array.size() > 1){				
 				if((mContext.mListMusicInfoModels.size() < (begin.m_sFileNum - begin.m_nIndex)/2)){
 					//如果需要续传的数目，小于 总数目-第一个需要续传的索引，则挨个传
 					boolean isHeaderSend = false;
@@ -424,7 +420,10 @@ public class KcReceiveMsgThread implements Runnable {
 			}
 
 			//send resend 0 ,resend all after first
-			SendReSendFileModel model = new SendReSendFileModel((byte)0, (short) array.size(), (short)begin.m_nIndex, begin.m_nDownLoadOffset);
+			SendReSendFileModel model = new SendReSendFileModel((byte)0, 
+					(short) (begin.m_sFileNum - begin.m_nIndex + 1), 
+					(short)begin.m_nIndex, 
+					begin.m_nDownLoadOffset);
 			
 			try {
 				outputStream.write(model.toBinStream());
@@ -440,10 +439,13 @@ public class KcReceiveMsgThread implements Runnable {
 		return false;
 	}
 
-	private MusicInfoModel getMusicModel(int nFileIndex, short fileNum, String fileName, int duration) {
-		MusicInfoModel ret = mContext.getMusicInfoModelByName(fileName);
-		if(ret == null)
-			ret = new MusicInfoModel(nFileIndex, fileNum, fileName, duration);
+	private MusicInfoModel getMusicModel(DataHeaderModel dataHeader, int duration) {
+		
+		MusicInfoModel ret = mContext.getMusicInfoModelByName(dataHeader.m_strFileName);
+		if(ret == null){
+			ret = new MusicInfoModel(dataHeader.m_nFileIndex, dataHeader.m_sFileNum, dataHeader.m_strFileName, duration);
+			ret.m_nFileLength = dataHeader.m_nDataLength;
+		}
 		
 		return ret;
 	}

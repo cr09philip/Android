@@ -72,17 +72,29 @@ public class MusicAdapter extends ArrayListAdapter<MusicInfoModel>{
 		switch( info.m_nDownloadStatus){
 		case MusicInfoModel.DOWNLOAD_STATUS_BEGIN:
 		case MusicInfoModel.DOWNLOAD_STATUS_PROGRESSING:
+		{
 			String format = mContext.getString(R.string.receive_progress);
 			String str = String.format( format, info.m_nDownPercent);
 			holder.statusView.setText(str);
+		}
 			break;
 		case MusicInfoModel.DOWNLOAD_STATUS_END:
 			holder.statusView.setText(R.string.receive_success);
 //			statusView.setBackground(background);
 			break;
 		case MusicInfoModel.DOWNLOAD_STATUS_LOCAL:
-			holder.statusView.setVisibility(View.GONE);
-			holder.processBar.setVisibility(View.GONE);
+			if( info.m_isNeedContinue){
+				holder.statusView.setVisibility(View.VISIBLE);
+				holder.processBar.setVisibility(View.VISIBLE);
+				
+				String format = mContext.getString(R.string.receive_progress);
+				String str = String.format( format, info.m_nDownPercent);
+				holder.statusView.setText(str);
+			}
+			else{
+				holder.statusView.setVisibility(View.GONE);
+				holder.processBar.setVisibility(View.GONE);
+			}
 			break;
 		case MusicInfoModel.DOWNLOAD_STATUS_ERROR:
 			holder.statusView.setText(R.string.receive_error);

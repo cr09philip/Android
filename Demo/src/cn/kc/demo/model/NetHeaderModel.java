@@ -50,15 +50,11 @@ public class NetHeaderModel {
 		byte[] resBuf = new byte[10];
 		int nIndex = 0;
 		
-		byte[] shortBuf = CodeUtil.short2bytes(mStif, true);
-		for(int i = 0; i < shortBuf.length;i++){
-			resBuf[nIndex++] = shortBuf[i];
-		}
+		System.arraycopy(CodeUtil.short2bytes(mStif, true), 0, resBuf, nIndex, 2);
+		nIndex += 2;
 		
-		byte[] intBuf = CodeUtil.int2bytes(mLength, true);
-		for(int i = 0; i < intBuf.length;i++){
-			resBuf[nIndex++] = intBuf[i];
-		}
+		System.arraycopy(CodeUtil.int2bytes(mLength, true), 0, resBuf, nIndex, 4);
+		nIndex += 4;
 		
 		resBuf[nIndex++] = mSid;
 		resBuf[nIndex++] = mDid;

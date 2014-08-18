@@ -20,27 +20,21 @@ public class SendReSendFileModel extends NetHeaderModel {
 	
 	public byte[] toBinStream(){
 		byte[] resBuf = new byte[RESEND_CMD_HEADER_FIXED_SIZE];
-
+		int nIndex = 0;
 		byte[] header = super.toBinStream();
-		for (int i = 0; i < header.length; i++){
-			resBuf[i] = header[i];
-		}
+		System.arraycopy(header, 0, resBuf, nIndex, header.length);
+		nIndex += header.length;
 		
-		resBuf[10] = m_mode;
+		resBuf[nIndex++] = m_mode;
 		
-		byte[] shortBuf = CodeUtil.short2bytes(m_nCount, true);
-		for(int i = 0; i < shortBuf.length;i++){
-			resBuf[11+i] = shortBuf[i];
-		}
-		byte[] shortBuf1 = CodeUtil.short2bytes(m_nIndex, true);
-		for(int i = 0; i < shortBuf1.length;i++){
-			resBuf[13+i] = shortBuf1[i];
-		}
+		System.arraycopy(CodeUtil.short2bytes(m_nCount, true), 0, resBuf, nIndex, 2);
+		nIndex += 2;
+
+		System.arraycopy(CodeUtil.short2bytes(m_nIndex, true), 0, resBuf, nIndex, 2);
+		nIndex += 2;
 		
-		byte[] intBuf = CodeUtil.int2bytes(m_nOffset, true);
-		for(int i = 0; i < intBuf.length;i++){
-			resBuf[15+i] = intBuf[i];
-		}
+		System.arraycopy(CodeUtil.int2bytes(m_nOffset, true), 0, resBuf, nIndex, 4);
+		nIndex += 4;
 
 		return resBuf;
 	}
