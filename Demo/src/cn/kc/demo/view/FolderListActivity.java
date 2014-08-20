@@ -23,6 +23,7 @@ import cn.kc.demo.CrashHandler;
 import cn.kc.demo.R;
 import cn.kc.demo.adapter.FolderAdapter;
 import cn.kc.demo.model.FolderModel;
+import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.utils.FileUtil;
 import cn.kc.demo.utils.Utils;
 
@@ -38,6 +39,7 @@ public class FolderListActivity extends Activity {
 	private FolderAdapter mFolderListAdapter;
 
 	private boolean isAlertShowed = false;
+	private boolean mIsFirstLoaded = true;
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -145,6 +147,10 @@ public class FolderListActivity extends Activity {
 	protected void onResume() {
 		super.onResume();
 		
+		if(!isAlertShowed && isUnfinishFileExists()){//遍历最近的文件夹内是否存在断点文件， 则不允许弹框
+			isAlertShowed = true;
+		}
+		
 		if(!isAlertShowed){
 			isAlertShowed = true;
 			LayoutInflater factory = LayoutInflater.from(this);
@@ -180,7 +186,14 @@ public class FolderListActivity extends Activity {
                 })
                 .create()
                 .show();
+		}else{ // 直接进入存在断点文件的文件夹
+			if(mIsFirstLoaded ){
+				FolderModel model = mListFolder.get(0);
+				startActivityWithFolder(model);
+			}
 		}
+		
+		mIsFirstLoaded = false;
 	}
 
 	@Override
@@ -191,5 +204,27 @@ public class FolderListActivity extends Activity {
 	@Override
 	protected void onStop() {
 		super.onStop();
+	}
+	
+	private boolean isUnfinishFileExists(){
+		FolderModel recentFolder = mListFolder.get(0);
+	
+		File file = new File(mAppPath + "/" + recentFolder.getFolderName());
+		File[] files = file.listFiles();
+
+        if(files == null)  
+            return false;
+        
+	    for (int i = 0; i < files.length; i++) {
+	        File f = files[i];
+	        if ( f.isFile() ){
+	        	MusicInfoModel info = MusicInfoModel.GetMusicInfoModelFromFile(f);
+	        	
+	        	if( info.m_isNeedContinue)
+	        		return true;
+	        }
+	    }
+	    
+		return false;
 	}
 }

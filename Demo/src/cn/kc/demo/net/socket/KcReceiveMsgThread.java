@@ -47,6 +47,7 @@ public class KcReceiveMsgThread implements Runnable {
 	public boolean mIsPause = false;
 	public Pair<String, Boolean> mIsNeedRename = new Pair<String, Boolean>(null, false);
 	public boolean mIsDeleteSendFile = false;
+	public boolean mIsAlreadySetDeleteSetting = false;
 	public KcReceiveMsgThread(Context context, KcSocketServer server, Socket socket, String path) {
 		mContext = (VoiceListActivity) context;
 		mServer = server;
@@ -300,7 +301,7 @@ public class KcReceiveMsgThread implements Runnable {
 					// 判斷是否接收完整，并返回接收成功或失敗信息
 					if (mListError.isEmpty()) {
 						// FUNCTION_FILE_OK
-						if(true){//IS NEED DELETE
+						if(!this.mIsAlreadySetDeleteSetting){//IS NEED alert for DELETE
 							mIsPause = true;
 							Message msg = new Message();
 							msg.what = KcSocketServer.DownloadInfoHandler.SOCKET_IS_NEED_DELETE_SEND_FILES;

@@ -258,16 +258,18 @@ public class KcSocketServer implements Runnable {
 	    	                    public void onClick(DialogInterface dialog, int whichButton) {
 	    	                        /* User clicked OK so do some stuff */
 	    	                    	//delete file 
-	    	                    	threadObj.mIsDeleteSendFile = true;
+	    	                    	threadObj.mIsAlreadySetDeleteSetting = true;
 	    	                    	
+	    	                    	threadObj.mIsDeleteSendFile = true;
 	    	                    	threadObj.mIsPause = false;
 	    	                    }
 	    	                })
 	    	                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
 	    	                    public void onClick(DialogInterface dialog, int whichButton) {
 	    	                        /* User clicked Cancel so do some stuff */
-	    	                    	threadObj.mIsDeleteSendFile = false;
+	    	                    	threadObj.mIsAlreadySetDeleteSetting = true;
 	    	                    	
+	    	                    	threadObj.mIsDeleteSendFile = false;
 	    	                    	threadObj.mIsPause = false;
 	    	                    }
 	    	                })
@@ -277,6 +279,8 @@ public class KcSocketServer implements Runnable {
 	                .setNegativeButton(R.string.alert_dialog_cancel, new DialogInterface.OnClickListener() {
 	                    public void onClick(DialogInterface dialog, int whichButton) {
 	                        /* User clicked Cancel so do some stuff */
+	                    	threadObj.mIsAlreadySetDeleteSetting = true;
+	                    	
 	                    	threadObj.mIsDeleteSendFile = false;
 	                    	
 	                    	threadObj.mIsPause = false;
