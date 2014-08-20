@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.MediaPlayer.OnSeekCompleteListener;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -29,6 +30,7 @@ import cn.kc.demo.SettingsSp;
 import cn.kc.demo.adapter.MusicAdapter;
 import cn.kc.demo.adapter.MusicAdapter.ViewHolder;
 import cn.kc.demo.audio.AudioPlayer;
+import cn.kc.demo.model.FileHeader;
 import cn.kc.demo.model.MusicInfoModel;
 import cn.kc.demo.net.socket.KcReceiveMsgThread.ReceiveInfo;
 import cn.kc.demo.net.socket.KcSocketServer;
@@ -80,7 +82,6 @@ public class VoiceListActivity extends Activity
 		
 	AudioPlayer mPlayer;
 //	AdpcmAudioPlayer mPlayer;
-	private int mPlayPosition = 0;
 	public String mFolderPath = null;
 	
 	public int mCurVoiceIndex;
@@ -114,6 +115,7 @@ public class VoiceListActivity extends Activity
 	private String mFolderName;
 	private boolean mIsReceving;
 	private long mLastRefreshTime;
+	private int mLastStateBeforeTracking;
 	
 	public SettingsSp getSettingsDetails() {
 		return SettingsSp.Instance().init(this);
@@ -315,18 +317,29 @@ public class VoiceListActivity extends Activity
 	
 	public void onProgressChanged(SeekBar seekBar, int progress,
 			boolean fromUser) {
-//		mPlayPosition = progress*info.m_nDuration/100;
-//		mPlayCurrentTimeView.setText(String.format(getString(R.string.play_time), mPlayPosition/60, mPlayPosition%60));
+		if(mCurPlayMusicInfo != null && mPlayer.isInited() && mPlayer.mDecoderBlockSize != 0){
+			int playPosition = progress * mCurPlayMusicInfo.m_nDuration/100;
+			mPlayCurrentTimeView.setText(String.format(getString(R.string.play_time), playPosition/60, playPosition%60));
+		}
 	}
 
 	public void onStartTrackingTouch(SeekBar seekBar) {
-		
+		mLastStateBeforeTracking = mPlayer.getPlayState();
+		if( mLastStateBeforeTracking == AudioTrack.PLAYSTATE_PLAYING )
+			mPlayer.pause();
 	}
 
 	public void onStopTrackingTouch(SeekBar seekBar) {	
 		//set player to play the nCurPos
-//		mPlayPosition = seekBar.getProgress()*info.m_nDuration/100;
-//		mPlayer.seek(mPlayPosition);		
+		if(mCurPlayMusicInfo != null && mPlayer.isInited() && mPlayer.mDecoderBlockSize != 0){
+			long playOffset = seekBar.getProgress()*mCurPlayMusicInfo.m_nFileLength/100;
+			
+			playOffset = playOffset - playOffset % mPlayer.mDecoderBlockSize;
+	
+			mPlayer.setPlayOffset(playOffset + FileHeader.FILE_HEADER_SIZE);
+			if(mLastStateBeforeTracking == AudioTrack.PLAYSTATE_PLAYING)
+				mPlayer.play();
+		}
 	}
 
 	public void onClick(View v) {
@@ -428,8 +441,10 @@ public class VoiceListActivity extends Activity
 			}
 		}
 
-		if(mPlayer.init(mFolderPath + "/" + mCurPlayMusicInfo.m_strName))
+		if(mPlayer.init(mFolderPath + "/" + mCurPlayMusicInfo.m_strName)){
 			RefreshAllPlayInfo(mCurPlayMusicInfo);
+			mSeekBar.setEnabled(true);
+		}
 		else{
 			Toast.makeText(VoiceListActivity.this, "文件不存在", Toast.LENGTH_LONG).show();	
 		}

@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 
 import android.content.Context;
 import android.media.AudioFormat;
@@ -50,7 +51,8 @@ public class AudioPlayer implements Runnable{
 	private float mCurAudioVolume = 1.0f; //defalut volume is no Attenuation
 	private boolean mIsAudioVolumeMute = false;
 
-	private FileInputStream mInput;
+//	private FileInputStream mInput;
+	private RandomAccessFile mInput;
 	
 	private boolean mIsInited = false;
 
@@ -58,6 +60,7 @@ public class AudioPlayer implements Runnable{
 
 	private G7221Decoder mG7221Decoder;
 
+	public int mDecoderBlockSize;
 	private int mDesiredFrames;
 
 	private int mn16bitWordsPerFrame;
@@ -68,12 +71,23 @@ public class AudioPlayer implements Runnable{
 	private final int OUTPUT_BUFFSIZE = MAX_DCT_LENGTH;
 
 	private Context mContext;
+
+	private long mPlayOffset;
+	public long getPlayOffset() {
+		return mPlayOffset;
+	}
+
+	public void setPlayOffset(long playOffset) {
+		this.mPlayOffset = playOffset;
+	}
+
 	public AudioPlayer(Context context){		
 		mMaxAudioVolume = AudioTrack.getMaxVolume();
 		mMinAudioVolume = AudioTrack.getMinVolume();
 		
 		mHandler = new PlayerInfoHandler();
 		mContext = context;
+		mDecoderBlockSize = 0;
 	}
 	private class PlayerInfoHandler extends Handler{
 		public static final int PLAY_OVER_FLAG = -1;
@@ -124,7 +138,8 @@ public class AudioPlayer implements Runnable{
 		}
 		
 		try {
-			mInput = new FileInputStream( new File(path) );
+//			mInput = new FileInputStream( new File(path) );
+			mInput = new RandomAccessFile(new File(path),"r");
 			byte[] header = new byte[FileHeader.FILE_HEADER_SIZE];
 			mInput.read(header, 0, FileHeader.FILE_HEADER_SIZE);
 			mHeader = new FileHeader(header);
@@ -136,6 +151,7 @@ public class AudioPlayer implements Runnable{
 				}else{
 					mAdpcmDecoder.initDecoder(mHeader.getSampleRate(), mHeader.isStereo(), mHeader.is16Bit(), mHeader.getBlockSize());
 				}
+				mDecoderBlockSize = mHeader.m_sBlock;
 				break;
 			case 1://G.722.1
 				if( mG7221Decoder != null){
@@ -149,8 +165,13 @@ public class AudioPlayer implements Runnable{
 						(int)SettingsSp.Instance().init(mContext).getBit_rate_value() * 1000,
 						(int)SettingsSp.Instance().init(mContext).getBand_width_value() * 1000);
 				
+				mDecoderBlockSize = mn16bitWordsPerFrame * 2;
+				if(mHeader.m_bChannels == 1){
+					mDecoderBlockSize *= 2;
+				}
 				break;
 			default:
+				mDecoderBlockSize = mHeader.m_sBlock;
 				break;
 			}
 			setIsInited(true);
@@ -174,15 +195,18 @@ public class AudioPlayer implements Runnable{
 	protected int getBufferToPlay(byte[] buf, int flag){
 		int nRes = 0;
 		try {
+			mInput.seek(mPlayOffset);
 			//解码
 			switch (mHeader.m_bFormatTag) {
 			case 0://ADPCM
 				if(mAdpcmDecoder != null){
-					byte[] tmpBuf = new byte[mHeader.m_sBlock];
-					int len = mInput.read(tmpBuf, 0, mHeader.m_sBlock);
+					byte[] tmpBuf = new byte[mDecoderBlockSize];
+					int len = mInput.read(tmpBuf, 0, mDecoderBlockSize);
 
 					if(len == -1)
 						return -1;
+					
+					mPlayOffset += len;
 					
 					if(mHeader.isStereo()){
 						nRes = mAdpcmDecoder.decodeStereo(tmpBuf, len, buf, flag);
@@ -202,8 +226,14 @@ public class AudioPlayer implements Runnable{
 						byte[] inRBuf = new byte[INPUT_BUFFSIZE * 2];
 						byte[] outBuf = new byte[OUTPUT_BUFFSIZE * 2];
 					
-						if ( -1 != mInput.read(inLBuf, 0, inBufValidLen) &&
-								-1 != mInput.read(inLBuf, 0, inBufValidLen)) {
+						int lenl = 0;
+						int lenr = 0;
+						if ( -1 != (lenl = mInput.read(inLBuf, 0, inBufValidLen)) &&
+								-1 != (lenr = mInput.read(inLBuf, 0, inBufValidLen)) ) {
+
+							mPlayOffset += lenl;
+							mPlayOffset += lenr;
+							
 							int outputLen = mG7221Decoder.decodeMono(inLBuf,
 									mn16bitWordsPerFrame,
 									inRBuf, 
@@ -223,7 +253,9 @@ public class AudioPlayer implements Runnable{
 
 						if(len == -1)
 							return -1;
-					
+
+						mPlayOffset += len;
+						
 						int decodeRet = mG7221Decoder.decode(inBuf, mn16bitWordsPerFrame, outBuf);
 
 						System.arraycopy(outBuf, 0, buf, 0, decodeRet * 2);
@@ -240,6 +272,8 @@ public class AudioPlayer implements Runnable{
 	
 					if(len == -1)
 						return -1;
+
+					mPlayOffset += len;
 					
 					System.arraycopy(tmpBuf, 0, buf, 0,  mHeader.m_sBlock);
 					
@@ -262,7 +296,7 @@ public class AudioPlayer implements Runnable{
 	}
 	protected void initAudioTrack() {
 		mThreadRunning = false;
-
+		mPlayOffset = FileHeader.FILE_HEADER_SIZE;
 		if(mHeader != null){
 			mFrequency = mHeader.m_bSamples * 1000;
 			mChannel = mHeader.m_bChannels == 0? AudioFormat.CHANNEL_OUT_MONO:AudioFormat.CHANNEL_OUT_STEREO;
@@ -317,8 +351,14 @@ public class AudioPlayer implements Runnable{
 				System.out.println("play===>"+flag);
 //				mAudioTrack.write(buf, 0, temp);
 				if( mAudioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING){
-					int nPos = mAudioTrack.getPlaybackHeadPosition();
-					mHandler.sendEmptyMessage(nPos / mFrequency);
+					
+//					int nPos = mAudioTrack.getPlaybackHeadPosition();
+//					mHandler.sendEmptyMessage(nPos / mFrequency);
+					if ( mHeader.m_nLength != 0) {
+						float percent = ((float)(mPlayOffset - FileHeader.FILE_HEADER_SIZE))/((float) mHeader.m_nLength);
+						int curPos = (int) (percent * mHeader.m_nDuration );
+						mHandler.sendEmptyMessage(curPos);
+					}
 				}
 			}else {  
                 try {  
